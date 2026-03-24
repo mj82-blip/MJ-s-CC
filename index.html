@@ -284,11 +284,7 @@
 
         <!-- MAX PROPERTY PRICE BREAKDOWN -->
         <div class="card">
-            <h2>Estimated Max Property Price — Breakdown
-                <span class="tooltip-wrap"><span class="info-icon">?</span>
-                    <span class="tip">Shows how the maximum affordable property price is derived from your borrowing capacity and LTV, and what the down payment split would look like at that price.</span>
-                </span>
-            </h2>
+            <h2>What You Can Afford</h2>
             <table class="breakdown-table">
                 <thead>
                     <tr><th>Item</th><th class="right">Amount</th></tr>
@@ -721,51 +717,27 @@ function calculate() {
     }
     if (ltvApplied > 0) {
         const mpp = maxPropertyFromLoan;
-        const mppLoan = mpp * ltvApplied;
-        const mppDownPayment = mpp - mppLoan;
-        const mppMinCashPct = outstandingLoans === 0 && loanType === 'bank' ? 0.05 : (outstandingLoans > 0 ? 0.25 : 0);
-        const mppMinCash = mpp * mppMinCashPct;
-        const mppCpfForDP = Math.min(totalCPF, Math.max(0, mppDownPayment - mppMinCash));
-        const mppCashNeeded = Math.max(0, mppDownPayment - mppCpfForDP);
+        const mppDownPayment = mpp * (1 - ltvApplied);
         const mppBSD = calcBSD(mpp);
-        const mppTotalCashUpfront = mppCashNeeded + mppBSD;
-        const mppCashRemaining = Math.max(0, totalCash - mppTotalCashUpfront);
+        const mppCpfUsable = Math.min(totalCPF, Math.max(0, mppDownPayment - mpp * (outstandingLoans === 0 && loanType === 'bank' ? 0.05 : (outstandingLoans > 0 ? 0.25 : 0))));
+        const mppTotalCash = Math.max(0, mppDownPayment - mppCpfUsable) + mppBSD;
+        const mppCashRemaining = Math.max(0, totalCash - mppTotalCash);
 
         let mpHTML = '';
-        if (isCashConstrained) {
-            mpHTML += `<tr><td>Income-Based Max Price</td><td class="right">${fmt(incomeOnlyMax)}</td></tr>`;
-            mpHTML += `<tr><td colspan="2" style="color:#c53030;font-size:.85rem">Reduced — insufficient cash for down payment + BSD at that price</td></tr>`;
-        } else {
-            mpHTML += `<tr><td>Max Loan (from income capacity)</td><td class="right">${fmt(maxLoanAfford)}</td></tr>`;
-            mpHTML += `<tr><td>÷ LTV Ratio</td><td class="right">${pct(ltvApplied)}</td></tr>`;
-        }
-        mpHTML += `<tr class="total-row"><td>= Affordable Max Property Price</td><td class="right">${fmt(mpp)}${isCashConstrained ? ' <span class="tag tag-msr">Cash-limited</span>' : ''}</td></tr>`;
-        mpHTML += `<tr><td colspan="2" style="padding-top:.75rem;font-weight:600;color:#2b6cb0">Down Payment Breakdown</td></tr>`;
-        mpHTML += `<tr><td>Loan at ${pct(ltvApplied)} LTV</td><td class="right">${fmt(mppLoan)}</td></tr>`;
-        mpHTML += `<tr><td>Down Payment (${pct(1 - ltvApplied)})</td><td class="right">${fmt(mppDownPayment)}</td></tr>`;
-        if (mppMinCashPct > 0) {
-            mpHTML += `<tr><td>Minimum Cash (${pct(mppMinCashPct)} of price)</td><td class="right">${fmt(mppMinCash)}</td></tr>`;
-        }
-        mpHTML += `<tr><td>CPF OA Available (total)</td><td class="right">${fmt(totalCPF)}</td></tr>`;
-        mpHTML += `<tr><td>CPF Usable for Down Payment</td><td class="right">${fmt(mppCpfForDP)}</td></tr>`;
-        mpHTML += `<tr><td>Cash for Down Payment</td><td class="right">${fmt(mppCashNeeded)}</td></tr>`;
-        mpHTML += `<tr><td colspan="2" style="padding-top:.75rem;font-weight:600;color:#2b6cb0">Stamp Duty & Cash Position</td></tr>`;
-        mpHTML += `<tr><td>Buyer's Stamp Duty (BSD)</td><td class="right">${fmt(mppBSD)}</td></tr>`;
-        mpHTML += `<tr class="total-row"><td>Total Cash Needed Upfront</td><td class="right">${fmt(mppTotalCashUpfront)}</td></tr>`;
-        mpHTML += `<tr><td>Your Available Cash</td><td class="right">${fmt(totalCash)}</td></tr>`;
-        mpHTML += `<tr class="total-row"><td>Cash Remaining</td><td class="right" style="color:#276749">${fmt(mppCashRemaining)}</td></tr>`;
+        mpHTML += `<tr class="total-row"><td>Max Property Price</td><td class="right">${fmt(mpp)}${isCashConstrained ? ' <span class="tag tag-msr">Cash-limited</span>' : ''}</td></tr>`;
+        mpHTML += `<tr><td>Loan (${pct(ltvApplied)} LTV)</td><td class="right">${fmt(mpp * ltvApplied)}</td></tr>`;
+        mpHTML += `<tr><td>Down Payment</td><td class="right">${fmt(mppDownPayment)}</td></tr>`;
+        mpHTML += `<tr><td>CPF Usable</td><td class="right">${fmt(mppCpfUsable)}</td></tr>`;
+        mpHTML += `<tr><td>BSD</td><td class="right">${fmt(mppBSD)}</td></tr>`;
+        mpHTML += `<tr class="total-row"><td>Total Cash Needed</td><td class="right">${fmt(mppTotalCash)}</td></tr>`;
+        mpHTML += `<tr class="total-row"><td>Cash Remaining</td><td class="right" style="color:${mppCashRemaining > 0 ? '#276749' : '#c53030'}">${fmt(mppCashRemaining)}</td></tr>`;
         document.getElementById('maxPropBody').innerHTML = mpHTML;
 
-        const mpNotes = [];
-        if (isCashConstrained) {
-            mpNotes.push('Your max property price is limited by available cash, not income. Increase cash savings or CPF to unlock the full ' + fmt(incomeOnlyMax) + ' income-based capacity.');
-        } else {
-            mpNotes.push('Max property price = max loan ÷ LTV. You have sufficient cash and CPF to cover the down payment and BSD.');
-        }
-        mpNotes.push('BSD is calculated on the standard Singapore scale. ABSD (if applicable) is not included.');
-        document.getElementById('maxPropNote').innerHTML = mpNotes.join('<br>');
+        document.getElementById('maxPropNote').innerHTML = isCashConstrained
+            ? 'Limited by cash — income alone supports up to ' + fmt(incomeOnlyMax) + '. Increase savings or CPF to unlock full capacity.'
+            : 'ABSD not included — check if applicable based on residency and number of properties.';
     } else {
-        document.getElementById('maxPropBody').innerHTML = '<tr><td colspan="2">LTV is 0% — cannot estimate max property price.</td></tr>';
+        document.getElementById('maxPropBody').innerHTML = '<tr><td colspan="2">LTV is 0%</td></tr>';
         document.getElementById('maxPropNote').innerHTML = '';
     }
 
