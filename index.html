@@ -109,13 +109,24 @@
         .tab-btn.active{background:var(--primary);color:#fff}
 
         /* Affordability tab */
-        .scenario-row{display:flex;gap:1.25rem;flex-wrap:wrap}
-        .scenario-card{flex:1;min-width:260px;position:relative}
-        .scenario-card .remove-btn{position:absolute;top:.75rem;right:.75rem;width:24px;height:24px;border-radius:50%;border:none;background:var(--danger-bg);color:var(--danger);font-size:.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
-        .scenario-card .remove-btn:hover{background:var(--danger);color:#fff}
-        .scenario-card .form-group{margin-bottom:.65rem}
-        .scenario-card label{font-size:.78rem}
-        .scenario-card input[type="number"],.scenario-card select{padding:.5rem .7rem;font-size:.88rem}
+        .affordability-note{background:var(--primary-light);color:var(--primary-dark);padding:.75rem 1rem;border-radius:var(--radius-sm);font-size:.82rem;margin-bottom:1rem;line-height:1.5}
+        .add-scenario-btn{margin-bottom:1.25rem}
+        .scenario-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+        .scenario-table{width:100%;border-collapse:collapse;font-size:.85rem}
+        .scenario-table th,.scenario-table td{padding:.55rem .75rem;text-align:left;border-bottom:1px solid var(--border-light);vertical-align:middle}
+        .scenario-table th{font-weight:600;color:var(--text-secondary);font-size:.78rem;text-transform:uppercase;letter-spacing:.03em;background:var(--bg-main)}
+        .scenario-table thead th{background:var(--primary-light);color:var(--primary-dark);position:sticky;top:0;z-index:1}
+        .scenario-table thead th:first-child{border-radius:var(--radius-sm) 0 0 0}
+        .scenario-table thead th:last-child{border-radius:0 var(--radius-sm) 0 0}
+        .scenario-table .col-label{width:160px;min-width:130px;font-weight:600;color:var(--text-secondary);font-size:.82rem;background:var(--bg-card)}
+        .scenario-table .col-scenario{min-width:180px}
+        .scenario-table .section-row td,.scenario-table .section-row th{background:var(--bg-main);border-bottom:2px solid var(--border);padding:.45rem .75rem}
+        .scenario-table .section-label{font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:var(--primary)}
+        .scenario-table input[type="number"],.scenario-table select{width:100%;padding:.4rem .6rem;font-size:.85rem;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-card);font-family:inherit}
+        .scenario-table input[type="number"]:focus,.scenario-table select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-light)}
+        .scenario-table .remove-col-btn{background:none;border:none;color:var(--danger);font-size:.75rem;cursor:pointer;font-weight:600;padding:2px 6px;border-radius:var(--radius-sm);transition:all .2s}
+        .scenario-table .remove-col-btn:hover{background:var(--danger);color:#fff}
+        .scenario-table .result-val{font-weight:600;font-size:.88rem}
 
         .tdsr-bar{width:100%;height:8px;border-radius:4px;background:var(--border-light);margin:.35rem 0;overflow:hidden;position:relative}
         .tdsr-bar-fill{height:100%;border-radius:4px;transition:width .3s}
@@ -125,20 +136,13 @@
         .verdict-yellow{background:var(--warning-bg);color:var(--warning)}
         .verdict-red{background:var(--danger-bg);color:var(--danger)}
 
-        .scenario-results .result-row{padding:.4rem 0}
-        .scenario-results .result-label{font-size:.82rem}
-        .scenario-results .result-value{font-size:.85rem}
-
-        .affordability-note{background:var(--primary-light);color:var(--primary-dark);padding:.75rem 1rem;border-radius:var(--radius-sm);font-size:.82rem;margin-bottom:1rem;line-height:1.5}
-        .add-scenario-btn{margin-bottom:1.25rem}
-
         @media(max-width:640px){
             .row,.row3{flex-direction:column;gap:0}
             .container{padding:1rem .75rem 3rem}
             .card{padding:1.25rem 1.25rem;border-radius:var(--radius-sm)}
             .header h1{font-size:1.5rem}
-            .scenario-row{flex-direction:column}
-            .scenario-card{min-width:100%}
+            .scenario-table .col-label{min-width:110px;width:110px;font-size:.78rem}
+            .scenario-table .col-scenario{min-width:150px}
             .header-buttons{flex-direction:column;align-items:center}
         }
     </style>
@@ -440,9 +444,14 @@
 
     <!-- AFFORDABILITY SCENARIOS TAB -->
     <div id="tabAffordability" style="display:none">
-        <div class="affordability-note">Scenarios use your baseline inputs (income, age, CPF, cash, bank) from the Calculator tab.</div>
-        <button class="btn btn-primary add-scenario-btn" onclick="addScenario()">Add Scenario</button>
-        <div class="scenario-row" id="scenarioRow"></div>
+        <div class="affordability-note">Scenarios use your baseline inputs (income, age, CPF, cash, bank) from the Calculator tab. Add up to 3 property scenarios to compare side by side.</div>
+        <button class="btn btn-primary add-scenario-btn" onclick="addScenario()">+ Add Scenario</button>
+        <div class="scenario-table-wrap">
+            <table class="scenario-table" id="scenarioTable" style="display:none">
+                <thead id="scenarioTHead"></thead>
+                <tbody id="scenarioTBody"></tbody>
+            </table>
+        </div>
     </div>
 
 </div>
@@ -926,7 +935,7 @@ function switchTab(tabName) {
         btnCalc.classList.remove('active');
         btnAff.classList.add('active');
         // recalc all scenarios with latest baseline
-        scenarios.forEach((_, i) => calcScenario(i));
+        renderAndCalcAll();
     }
 }
 
@@ -967,91 +976,33 @@ function getBaselineValues() {
 
 function addScenario() {
     if (scenarios.length >= MAX_SCENARIOS) return;
-    const idx = scenarios.length;
-    // Defaults from calculator
-    const pp = document.getElementById('propertyPrice').value || '0';
-    const tn = document.getElementById('tenure').value || '25';
-    const ir = document.getElementById('interestRate').value || '3.5';
-    const ol = document.getElementById('outstandingLoans').value || '0';
-    const pt = document.getElementById('propertyType').value || 'private';
-    const lt = document.getElementById('loanType').value || 'bank';
-
-    scenarios.push({ propertyPrice: pp, tenure: tn, interestRate: ir, outstandingLoans: ol, propertyType: pt, loanType: lt });
-    renderScenarios();
-    calcScenario(idx);
+    scenarios.push({
+        propertyPrice: document.getElementById('propertyPrice').value || '0',
+        tenure: document.getElementById('tenure').value || '25',
+        interestRate: document.getElementById('interestRate').value || '3.5',
+        outstandingLoans: document.getElementById('outstandingLoans').value || '0',
+        propertyType: document.getElementById('propertyType').value || 'private',
+        loanType: document.getElementById('loanType').value || 'bank'
+    });
+    renderAndCalcAll();
 }
 
 function removeScenario(idx) {
     scenarios.splice(idx, 1);
-    renderScenarios();
-    scenarios.forEach((_, i) => calcScenario(i));
-}
-
-function renderScenarios() {
-    const container = document.getElementById('scenarioRow');
-    let html = '';
-    scenarios.forEach((s, i) => {
-        html += `<div class="card scenario-card" id="scenarioCard${i}">
-            <button class="remove-btn" onclick="removeScenario(${i})" title="Remove">&times;</button>
-            <h2 style="font-size:.95rem">Scenario ${i+1}</h2>
-            <div class="form-group">
-                <label>Property Price (SGD)</label>
-                <input type="number" id="sc_price_${i}" value="${s.propertyPrice}" min="0" step="10000" oninput="scenarioFieldChanged(${i})">
-            </div>
-            <div class="form-group">
-                <label>Loan Tenure (years)</label>
-                <input type="number" id="sc_tenure_${i}" value="${s.tenure}" min="1" max="30" oninput="scenarioFieldChanged(${i})">
-            </div>
-            <div class="form-group">
-                <label>Interest Rate (% p.a.)</label>
-                <input type="number" id="sc_rate_${i}" value="${s.interestRate}" min="0.1" max="10" step="0.1" oninput="scenarioFieldChanged(${i})">
-            </div>
-            <div class="form-group">
-                <label>Outstanding Home Loans</label>
-                <select id="sc_loans_${i}" onchange="scenarioFieldChanged(${i})">
-                    <option value="0"${s.outstandingLoans==='0'?' selected':''}>None (1st property)</option>
-                    <option value="1"${s.outstandingLoans==='1'?' selected':''}>1 outstanding loan</option>
-                    <option value="2"${s.outstandingLoans==='2'?' selected':''}>2 or more</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Property Type</label>
-                <select id="sc_proptype_${i}" onchange="scenarioFieldChanged(${i})">
-                    <option value="hdb"${s.propertyType==='hdb'?' selected':''}>HDB Flat</option>
-                    <option value="ec"${s.propertyType==='ec'?' selected':''}>Executive Condo</option>
-                    <option value="private"${s.propertyType==='private'?' selected':''}>Private Property</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Loan Type</label>
-                <select id="sc_loantype_${i}" onchange="scenarioFieldChanged(${i})">
-                    <option value="bank"${s.loanType==='bank'?' selected':''}>Bank Loan</option>
-                    <option value="hdb"${s.loanType==='hdb'?' selected':''}>HDB Loan</option>
-                </select>
-            </div>
-            <div class="scenario-results" id="scenarioResults${i}"></div>
-        </div>`;
-    });
-    container.innerHTML = html;
+    renderAndCalcAll();
 }
 
 function scenarioFieldChanged(idx) {
-    // Sync back to scenarios array
     scenarios[idx].propertyPrice = document.getElementById('sc_price_'+idx).value;
     scenarios[idx].tenure = document.getElementById('sc_tenure_'+idx).value;
     scenarios[idx].interestRate = document.getElementById('sc_rate_'+idx).value;
     scenarios[idx].outstandingLoans = document.getElementById('sc_loans_'+idx).value;
     scenarios[idx].propertyType = document.getElementById('sc_proptype_'+idx).value;
     scenarios[idx].loanType = document.getElementById('sc_loantype_'+idx).value;
-    calcScenario(idx);
+    renderAndCalcAll();
 }
 
-function calcScenario(idx) {
-    const s = scenarios[idx];
-    const container = document.getElementById('scenarioResults'+idx);
-    if (!container) return;
-
-    const base = getBaselineValues();
+function calcScenarioData(s, base) {
     const propertyPrice = parseFloat(s.propertyPrice) || 0;
     const tenure = Math.min(Math.max(parseFloat(s.tenure) || 25, 1), 30);
     const interestRate = parseFloat(s.interestRate) || 3.5;
@@ -1060,85 +1011,126 @@ function calcScenario(idx) {
     const loanType = s.loanType;
 
     const stressRate = loanType === 'hdb' ? interestRate : Math.max(4.0, interestRate + 0.5);
-
-    // TDSR
     const tdsrCap = base.totalAssessedIncome * 0.55;
     const tdsrAvailable = Math.max(0, tdsrCap - base.totalDebt);
-
-    // MSR
     const msrApplies = propertyType === 'hdb' || propertyType === 'ec';
     const msrCap = base.totalAssessedIncome * 0.30;
     const msrAvailable = Math.max(0, msrCap - base.totalDebt);
+    const maxMonthly = msrApplies ? Math.min(tdsrAvailable, msrAvailable) : tdsrAvailable;
 
-    let maxMonthly;
-    if (msrApplies) {
-        maxMonthly = Math.min(tdsrAvailable, msrAvailable);
-    } else {
-        maxMonthly = tdsrAvailable;
-    }
-
-    // Age + tenure
     const agePlusTenure = base.oldestAge + tenure;
     const exceeds65 = agePlusTenure > 65;
     const ltvNormal = getLTV(outstandingLoans, loanType, false);
     const ltvReduced = getLTV(outstandingLoans, loanType, true);
     const ltvApplied = exceeds65 ? ltvReduced : ltvNormal;
-    const effectiveTenure = tenure; // scenarios keep tenure, accept reduced LTV
 
-    // Max loan
-    const maxLoanAfford = maxLoanFromPayment(maxMonthly, stressRate, effectiveTenure);
+    const maxLoanAfford = maxLoanFromPayment(maxMonthly, stressRate, tenure);
     const maxLoanLTV = ltvApplied > 0 && propertyPrice > 0 ? propertyPrice * ltvApplied : Infinity;
     const maxLoan = propertyPrice > 0 ? Math.min(maxLoanAfford, maxLoanLTV) : maxLoanAfford;
 
-    // Down payment, BSD, monthly repayment
     const downPayment = propertyPrice > 0 ? Math.max(0, propertyPrice - maxLoan) : 0;
     const bsd = propertyPrice > 0 ? calcBSD(propertyPrice) : 0;
-    const actualMonthly = maxLoan > 0 ? monthlyPayment(maxLoan, interestRate, effectiveTenure) : 0;
+    const actualMonthly = maxLoan > 0 ? monthlyPayment(maxLoan, interestRate, tenure) : 0;
 
-    // TDSR utilization
-    const tdsrUsed = base.totalAssessedIncome > 0 ? ((base.totalDebt + (maxLoan > 0 ? monthlyPayment(maxLoan, stressRate, effectiveTenure) : 0)) / base.totalAssessedIncome) * 100 : 0;
+    const tdsrUsed = base.totalAssessedIncome > 0 ? ((base.totalDebt + (maxLoan > 0 ? monthlyPayment(maxLoan, stressRate, tenure) : 0)) / base.totalAssessedIncome) * 100 : 0;
     const tdsrPct = Math.min(tdsrUsed, 100);
 
-    // Cash position
     const totalCashNeeded = downPayment + bsd;
     const cpfUsable = propertyPrice > 0 ? Math.min(base.totalCPF, Math.max(0, downPayment - (outstandingLoans === 0 && loanType === 'bank' ? propertyPrice * 0.05 : (outstandingLoans > 0 ? propertyPrice * 0.25 : 0)))) : 0;
     const cashNeeded = Math.max(0, totalCashNeeded - cpfUsable);
     const cashPosition = base.totalCash - cashNeeded;
 
-    // Verdict
     let verdict, verdictClass;
-    if (propertyPrice <= 0) {
-        verdict = 'Enter a price';
-        verdictClass = 'verdict-yellow';
-    } else if (cashPosition < 0 || ltvApplied === 0) {
-        verdict = 'Cannot Afford';
-        verdictClass = 'verdict-red';
-    } else if (tdsrPct > 50 || cashPosition < propertyPrice * 0.02) {
-        verdict = 'Tight';
-        verdictClass = 'verdict-yellow';
-    } else {
-        verdict = 'Affordable';
-        verdictClass = 'verdict-green';
-    }
+    if (propertyPrice <= 0) { verdict = 'Enter a price'; verdictClass = 'verdict-yellow'; }
+    else if (cashPosition < 0 || ltvApplied === 0) { verdict = 'Cannot Afford'; verdictClass = 'verdict-red'; }
+    else if (tdsrPct > 50 || cashPosition < propertyPrice * 0.02) { verdict = 'Tight'; verdictClass = 'verdict-yellow'; }
+    else { verdict = 'Affordable'; verdictClass = 'verdict-green'; }
 
-    // TDSR bar color
     let barColor;
     if (tdsrPct <= 40) barColor = 'var(--success)';
     else if (tdsrPct <= 50) barColor = 'var(--warning)';
     else barColor = 'var(--danger)';
 
-    let html = '<div style="border-top:1px dashed var(--border);margin-top:.75rem;padding-top:.75rem">';
-    html += `<div class="result-row"><span class="result-label">Max Loan (TDSR/MSR)</span><span class="result-value">${fmt(maxLoanAfford)}</span></div>`;
-    html += `<div class="result-row"><span class="result-label">LTV Applied</span><span class="result-value">${pct(ltvApplied)}</span></div>`;
-    html += `<div class="result-row"><span class="result-label">Down Payment</span><span class="result-value">${propertyPrice > 0 ? fmt(downPayment) : '-'}</span></div>`;
-    html += `<div class="result-row"><span class="result-label">BSD</span><span class="result-value">${propertyPrice > 0 ? fmt(bsd) : '-'}</span></div>`;
-    html += `<div class="result-row"><span class="result-label">Monthly Repayment</span><span class="result-value">${maxLoan > 0 ? fmt(actualMonthly)+'/mo' : '-'}</span></div>`;
-    html += `<div class="result-row"><span class="result-label">TDSR Utilization</span><span class="result-value">${tdsrPct.toFixed(1)}%</span></div>`;
-    html += `<div class="tdsr-bar"><div class="tdsr-bar-fill" style="width:${tdsrPct}%;background:${barColor}"></div></div>`;
-    html += `<div class="result-row"><span class="result-label">Cash Position</span><span class="result-value" style="color:${cashPosition >= 0 ? 'var(--success)' : 'var(--danger)'}">${propertyPrice > 0 ? (cashPosition >= 0 ? 'Surplus '+fmt(cashPosition) : 'Shortfall '+fmt(Math.abs(cashPosition))) : '-'}</span></div>`;
-    html += `<div class="result-row"><span class="result-label">Verdict</span><span class="verdict-badge ${verdictClass}">${verdict}</span></div>`;
-    html += '</div>';
-    container.innerHTML = html;
+    return { propertyPrice, tenure, interestRate, outstandingLoans, propertyType, loanType, maxLoanAfford, ltvApplied, downPayment, bsd, actualMonthly, maxLoan, tdsrPct, barColor, cashPosition, verdict, verdictClass, msrApplies };
+}
+
+function renderAndCalcAll() {
+    const table = document.getElementById('scenarioTable');
+    if (scenarios.length === 0) { table.style.display = 'none'; return; }
+    table.style.display = '';
+
+    const base = getBaselineValues();
+    const results = scenarios.map(s => calcScenarioData(s, base));
+    const n = scenarios.length;
+
+    // Build header
+    let thead = '<tr><th class="col-label"></th>';
+    for (let i = 0; i < n; i++) {
+        thead += `<th class="col-scenario">Scenario ${i+1} <button class="remove-col-btn" onclick="removeScenario(${i})" title="Remove">&times;</button></th>`;
+    }
+    thead += '</tr>';
+    document.getElementById('scenarioTHead').innerHTML = thead;
+
+    // Helpers for select options
+    const loanOpts = (sel) => `<option value="0"${sel==='0'?' selected':''}>None (1st)</option><option value="1"${sel==='1'?' selected':''}>1 loan</option><option value="2"${sel==='2'?' selected':''}>2+</option>`;
+    const propOpts = (sel) => `<option value="hdb"${sel==='hdb'?' selected':''}>HDB</option><option value="ec"${sel==='ec'?' selected':''}>EC</option><option value="private"${sel==='private'?' selected':''}>Private</option>`;
+    const ltOpts = (sel) => `<option value="bank"${sel==='bank'?' selected':''}>Bank</option><option value="hdb"${sel==='hdb'?' selected':''}>HDB</option>`;
+
+    // Input rows
+    const inputRows = [
+        { label: 'Property Price', field: 'propertyPrice', type: 'number', id: 'price', attrs: 'min="0" step="10000"' },
+        { label: 'Tenure (yrs)', field: 'tenure', type: 'number', id: 'tenure', attrs: 'min="1" max="30"' },
+        { label: 'Interest (%)', field: 'interestRate', type: 'number', id: 'rate', attrs: 'min="0.1" max="10" step="0.1"' },
+        { label: 'Outstanding Loans', field: 'outstandingLoans', type: 'select', id: 'loans', optsFn: loanOpts },
+        { label: 'Property Type', field: 'propertyType', type: 'select', id: 'proptype', optsFn: propOpts },
+        { label: 'Loan Type', field: 'loanType', type: 'select', id: 'loantype', optsFn: ltOpts },
+    ];
+
+    // Result rows
+    const resultRows = [
+        { label: 'Max Loan', fn: r => fmt(r.maxLoanAfford) },
+        { label: 'LTV Applied', fn: r => pct(r.ltvApplied) },
+        { label: 'Down Payment', fn: r => r.propertyPrice > 0 ? fmt(r.downPayment) : '-' },
+        { label: 'BSD', fn: r => r.propertyPrice > 0 ? fmt(r.bsd) : '-' },
+        { label: 'Monthly Repayment', fn: r => r.maxLoan > 0 ? fmt(r.actualMonthly)+'/mo' : '-' },
+        { label: 'TDSR Utilization', fn: r => r.tdsrPct.toFixed(1)+'%', extra: r => `<div class="tdsr-bar"><div class="tdsr-bar-fill" style="width:${r.tdsrPct}%;background:${r.barColor}"></div></div>` },
+        { label: 'Cash Position', fn: r => r.propertyPrice > 0 ? (r.cashPosition >= 0 ? 'Surplus '+fmt(r.cashPosition) : 'Shortfall '+fmt(Math.abs(r.cashPosition))) : '-', style: r => `color:${r.cashPosition >= 0 ? 'var(--success)' : 'var(--danger)'}` },
+        { label: 'Verdict', fn: r => `<span class="verdict-badge ${r.verdictClass}">${r.verdict}</span>`, isHTML: true },
+    ];
+
+    let tbody = '';
+
+    // Section: Inputs
+    tbody += `<tr class="section-row"><td class="section-label" colspan="${n+1}">Property Inputs</td></tr>`;
+    inputRows.forEach(row => {
+        tbody += '<tr><td class="col-label">' + row.label + '</td>';
+        for (let i = 0; i < n; i++) {
+            const s = scenarios[i];
+            const ev = row.type === 'select' ? 'onchange' : 'oninput';
+            if (row.type === 'number') {
+                tbody += `<td><input type="number" id="sc_${row.id}_${i}" value="${s[row.field]}" ${row.attrs} ${ev}="scenarioFieldChanged(${i})"></td>`;
+            } else {
+                tbody += `<td><select id="sc_${row.id}_${i}" ${ev}="scenarioFieldChanged(${i})">${row.optsFn(s[row.field])}</select></td>`;
+            }
+        }
+        tbody += '</tr>';
+    });
+
+    // Section: Results
+    tbody += `<tr class="section-row"><td class="section-label" colspan="${n+1}">Results</td></tr>`;
+    resultRows.forEach(row => {
+        tbody += '<tr><td class="col-label">' + row.label + '</td>';
+        for (let i = 0; i < n; i++) {
+            const r = results[i];
+            const st = row.style ? ` style="${row.style(r)}"` : '';
+            const val = row.fn(r);
+            const extra = row.extra ? row.extra(r) : '';
+            tbody += `<td class="result-val"${st}>${val}${extra}</td>`;
+        }
+        tbody += '</tr>';
+    });
+
+    document.getElementById('scenarioTBody').innerHTML = tbody;
 }
 
 /* ── Live calculation on any input change ── */
