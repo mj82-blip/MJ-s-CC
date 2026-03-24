@@ -1109,7 +1109,7 @@ function calcScenarioData(s, base) {
     else if (tdsrPct <= 50) barColor = 'var(--warning)';
     else barColor = 'var(--danger)';
 
-    return { propertyPrice, tenure, interestRate, outstandingLoans, propertyType, loanType, maxLoanAfford, ltvApplied, downPayment, bsd, totalCashNeeded, actualMonthly, maxLoan, tdsrPct, barColor, cashPosition, verdict, verdictClass, msrApplies, mandatoryCash, cpfUsable, minLoanQuantum, maxLoanQuantum, month1Interest, month1Principal, totalInterest, totalRepayment, equityPctY5, equityY5, breakEvenRent, loanForCalc };
+    return { propertyPrice, tenure, interestRate, outstandingLoans, propertyType, loanType, maxLoanAfford, ltvApplied, downPayment, bsd, totalCashNeeded, actualMonthly, maxLoan, tdsrPct, barColor, cashPosition, verdict, verdictClass, msrApplies, mandatoryCash, cpfUsable, cashNeeded, totalCash: base.totalCash, totalCPF: base.totalCPF, minLoanQuantum, maxLoanQuantum, month1Interest, month1Principal, totalInterest, totalRepayment, equityPctY5, equityY5, breakEvenRent, loanForCalc };
 }
 
 const RESULT_ROW_DEFS = [
@@ -1117,12 +1117,15 @@ const RESULT_ROW_DEFS = [
     { label: 'Loan Quantum Range', fn: r => { if (r.propertyPrice <= 0) return fmt(0) + ' — ' + fmt(r.maxLoanQuantum); const ltvCap = r.propertyPrice * r.ltvApplied; const lo = Math.min(r.minLoanQuantum, ltvCap); const hi = Math.min(r.maxLoanQuantum, ltvCap); return fmt(Math.min(lo,hi)) + ' — ' + fmt(Math.max(lo,hi)); } },
     { label: 'Actual Loan', fn: r => r.propertyPrice > 0 ? fmt(r.loanForCalc) : '-' },
     { label: 'LTV Applied', fn: r => pct(r.ltvApplied) },
-    { section: 'Upfront Costs' },
-    { label: 'Down Payment', fn: r => r.propertyPrice > 0 ? fmt(r.downPayment) : '-' },
-    { label: 'Min Cash (mandatory)', fn: r => r.propertyPrice > 0 ? fmt(r.mandatoryCash) : '-' },
+    { section: 'Cash Supply' },
+    { label: 'Available Cash', fn: r => fmt(r.totalCash) },
     { label: 'CPF Usable', fn: r => r.propertyPrice > 0 ? fmt(r.cpfUsable) : '-' },
+    { label: 'Total Supply', fn: r => r.propertyPrice > 0 ? fmt(r.totalCash + r.cpfUsable) : fmt(r.totalCash) },
+    { section: 'Cash Demand' },
+    { label: 'Down Payment', fn: r => r.propertyPrice > 0 ? fmt(r.downPayment) : '-' },
     { label: "Buyer's Stamp Duty", fn: r => r.propertyPrice > 0 ? fmt(r.bsd) : '-' },
-    { label: 'Total Cash Needed', fn: r => r.propertyPrice > 0 ? fmt(r.totalCashNeeded) : '-' },
+    { label: 'Total Demand', fn: r => r.propertyPrice > 0 ? fmt(r.totalCashNeeded) : '-' },
+    { label: 'Surplus / Shortfall', fn: r => r.propertyPrice > 0 ? (r.cashPosition >= 0 ? 'Surplus '+fmt(r.cashPosition) : 'Shortfall '+fmt(Math.abs(r.cashPosition))) : '-', style: r => `color:${r.cashPosition >= 0 ? 'var(--success)' : 'var(--danger)'}` },
     { section: 'Monthly Breakdown' },
     { label: 'Monthly Repayment', fn: r => r.maxLoan > 0 ? fmt(r.actualMonthly)+'/mo' : '-' },
     { label: 'Interest (month 1)', fn: r => r.maxLoan > 0 ? fmt(r.month1Interest)+'/mo' : '-' },
@@ -1133,7 +1136,6 @@ const RESULT_ROW_DEFS = [
     { label: 'Interest-to-Loan %', fn: r => r.loanForCalc > 0 ? (r.totalInterest / r.loanForCalc * 100).toFixed(1) + '%' : '-' },
     { section: 'Affordability' },
     { label: 'TDSR Utilization', fn: r => r.tdsrPct.toFixed(1)+'%', extra: r => `<div class="tdsr-bar"><div class="tdsr-bar-fill" style="width:${r.tdsrPct}%;background:${r.barColor}"></div></div>` },
-    { label: 'Cash Position', fn: r => r.propertyPrice > 0 ? (r.cashPosition >= 0 ? 'Surplus '+fmt(r.cashPosition) : 'Shortfall '+fmt(Math.abs(r.cashPosition))) : '-', style: r => `color:${r.cashPosition >= 0 ? 'var(--success)' : 'var(--danger)'}` },
     { label: 'Equity @ Year 5', fn: r => r.propertyPrice > 0 ? fmt(r.equityY5) + ' (' + r.equityPctY5.toFixed(1) + '%)' : '-' },
     { label: 'Break-even Rent', fn: r => r.propertyPrice > 0 && r.maxLoan > 0 ? fmt(r.breakEvenRent)+'/mo' : '-' },
     { label: 'Verdict', fn: r => `<span class="verdict-badge ${r.verdictClass}">${r.verdict}</span>` },
