@@ -710,15 +710,15 @@ function calculate() {
     if (exceeds65 && !keepTenure) {
         document.getElementById('monthlyPayment').textContent += ' (' + effectiveTenure + '-yr tenure)';
     }
+    // ── Max Property Price Breakdown ──
+    const incomeOnlyMax = ltvApplied > 0 ? maxLoanAfford / ltvApplied : 0;
+    const isCashConstrained = maxPropertyFromLoan < incomeOnlyMax;
+
     if (ltvApplied > 0) {
         document.getElementById('maxProperty').innerHTML = fmt(maxPropertyFromLoan) + (isCashConstrained ? ' <span class="tag tag-msr">Cash-limited</span>' : '');
     } else {
         document.getElementById('maxProperty').textContent = 'N/A (LTV 0%)';
     }
-
-    // ── Max Property Price Breakdown ──
-    const incomeOnlyMax = ltvApplied > 0 ? maxLoanAfford / ltvApplied : 0;
-    const isCashConstrained = maxPropertyFromLoan < incomeOnlyMax;
     if (ltvApplied > 0) {
         const mpp = maxPropertyFromLoan;
         const mppLoan = mpp * ltvApplied;
