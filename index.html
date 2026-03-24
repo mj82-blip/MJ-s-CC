@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singapore Mortgage Calculator</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; }
+        .container { max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+        h1 { text-align: center; margin-bottom: 0.25rem; font-size: 1.8rem; color: #2d3748; }
+        .subtitle { text-align: center; color: #718096; margin-bottom: 2rem; font-size: 0.95rem; }
+        .card { background: #fff; border-radius: 12px; padding: 1.5rem 2rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .card h2 { font-size: 1.1rem; color: #2b6cb0; margin-bottom: 1rem; border-bottom: 2px solid #ebf4ff; padding-bottom: 0.5rem; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; font-weight: 600; margin-bottom: 0.25rem; font-size: 0.9rem; }
+        label small { font-weight: 400; color: #718096; }
+        input[type="number"], select {
+            width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #cbd5e0;
+            border-radius: 8px; font-size: 1rem; transition: border-color 0.2s;
+        }
+        input[type="number"]:focus, select:focus { outline: none; border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,0.15); }
+        .row { display: flex; gap: 1rem; }
+        .row .form-group { flex: 1; }
+        button {
+            width: 100%; padding: 0.75rem; background: #2b6cb0; color: #fff; border: none;
+            border-radius: 8px; font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: background 0.2s;
+        }
+        button:hover { background: #2c5282; }
+        .results { display: none; }
+        .result-row { display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid #edf2f7; }
+        .result-row:last-child { border-bottom: none; }
+        .result-label { color: #4a5568; }
+        .result-value { font-weight: 700; color: #2d3748; }
+        .result-value.highlight { color: #2b6cb0; font-size: 1.15rem; }
+        .result-value.warning { color: #c53030; }
+        .note { background: #fffaf0; border-left: 4px solid #ed8936; padding: 0.75rem 1rem; border-radius: 0 8px 8px 0; margin-top: 1rem; font-size: 0.85rem; color: #744210; }
+        .breakdown { margin-top: 0.5rem; }
+        .breakdown-item { font-size: 0.85rem; color: #718096; padding: 0.2rem 0; }
+        @media (max-width: 500px) { .row { flex-direction: column; gap: 0; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Singapore Mortgage Calculator</h1>
+    <p class="subtitle">Calculate your maximum mortgage based on MAS regulations</p>
+
+    <div class="card">
+        <h2>Your Income &amp; Obligations</h2>
+        <div class="form-group">
+            <label>Gross Monthly Income (SGD)</label>
+            <input type="number" id="income" value="8000" min="0" step="100">
+        </div>
+        <div class="form-group">
+            <label>Existing Monthly Debt Obligations (SGD) <small>car loans, credit cards, etc.</small></label>
+            <input type="number" id="existingDebt" value="0" min="0" step="50">
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Property Details</h2>
+        <div class="form-group">
+            <label>Property Type</label>
+            <select id="propertyType">
+                <option value="hdb">HDB Flat</option>
+                <option value="ec">Executive Condo (from developer)</option>
+                <option value="private" selected>Private Property</option>
+            </select>
+        </div>
+        <div class="row">
+            <div class="form-group">
+                <label>Loan Tenure (years)</label>
+                <input type="number" id="tenure" value="25" min="1" max="30">
+            </div>
+            <div class="form-group">
+                <label>Interest Rate (% p.a.)</label>
+                <input type="number" id="interestRate" value="3.5" min="0.1" max="10" step="0.1">
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group">
+                <label>Outstanding Home Loans</label>
+                <select id="outstandingLoans">
+                    <option value="0" selected>None (1st property)</option>
+                    <option value="1">1 outstanding loan</option>
+                    <option value="2">2 or more outstanding loans</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Loan Type</label>
+                <select id="loanType">
+                    <option value="bank" selected>Bank Loan</option>
+                    <option value="hdb">HDB Loan</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <button onclick="calculate()">Calculate Maximum Mortgage</button>
+
+    <div class="results" id="results">
+        <div class="card">
+            <h2>Your Maximum Mortgage</h2>
+            <div class="result-row">
+                <span class="result-label">Maximum Loan Amount</span>
+                <span class="result-value highlight" id="maxLoan">-</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">Monthly Repayment</span>
+                <span class="result-value" id="monthlyPayment">-</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">Total Interest Paid</span>
+                <span class="result-value" id="totalInterest">-</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">LTV Ratio Applied</span>
+                <span class="result-value" id="ltvRatio">-</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">Estimated Max Property Price</span>
+                <span class="result-value highlight" id="maxProperty">-</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Regulatory Limits</h2>
+            <div class="result-row">
+                <span class="result-label">TDSR Limit (55% of gross income)</span>
+                <span class="result-value" id="tdsrLimit">-</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">Available for Mortgage (after existing debt)</span>
+                <span class="result-value" id="tdsrAvailable">-</span>
+            </div>
+            <div id="msrRow" class="result-row" style="display:none;">
+                <span class="result-label">MSR Limit (30% of gross income)</span>
+                <span class="result-value" id="msrLimit">-</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">Binding Constraint</span>
+                <span class="result-value" id="bindingConstraint">-</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">Stress Test Rate Used</span>
+                <span class="result-value" id="stressRate">-</span>
+            </div>
+        </div>
+
+        <div class="note" id="noteBox"></div>
+    </div>
+</div>
+
+<script>
+function getLTV(outstandingLoans, loanType) {
+    if (loanType === 'hdb') {
+        return outstandingLoans === 0 ? 0.80 : 0;
+    }
+    if (outstandingLoans === 0) return 0.75;
+    if (outstandingLoans === 1) return 0.45;
+    return 0.35;
+}
+
+function monthlyPaymentForLoan(principal, annualRate, years) {
+    const r = annualRate / 100 / 12;
+    const n = years * 12;
+    if (r === 0) return principal / n;
+    return principal * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+}
+
+function maxLoanFromPayment(maxMonthly, annualRate, years) {
+    const r = annualRate / 100 / 12;
+    const n = years * 12;
+    if (r === 0) return maxMonthly * n;
+    return maxMonthly * (Math.pow(1 + r, n) - 1) / (r * Math.pow(1 + r, n));
+}
+
+function fmt(num) {
+    return 'SGD ' + Math.round(num).toLocaleString('en-SG');
+}
+
+function calculate() {
+    const income = parseFloat(document.getElementById('income').value) || 0;
+    const existingDebt = parseFloat(document.getElementById('existingDebt').value) || 0;
+    const propertyType = document.getElementById('propertyType').value;
+    const tenure = Math.min(parseFloat(document.getElementById('tenure').value) || 25, 30);
+    const interestRate = parseFloat(document.getElementById('interestRate').value) || 3.5;
+    const outstandingLoans = parseInt(document.getElementById('outstandingLoans').value);
+    const loanType = document.getElementById('loanType').value;
+
+    // MAS stress test rate: higher of 4% or actual rate + 2% for bank loans
+    const stressRate = loanType === 'hdb' ? interestRate : Math.max(4.0, interestRate + 0.5);
+
+    // TDSR: 55% of gross monthly income
+    const tdsrMax = income * 0.55;
+    const tdsrAvailable = Math.max(0, tdsrMax - existingDebt);
+
+    // MSR: 30% of gross monthly income (applies to HDB and EC from developer)
+    const msrApplies = propertyType === 'hdb' || propertyType === 'ec';
+    const msrMax = income * 0.30;
+    const msrAvailable = Math.max(0, msrMax - existingDebt);
+
+    // The binding monthly limit
+    let maxMonthly;
+    let constraint;
+    if (msrApplies) {
+        maxMonthly = Math.min(tdsrAvailable, msrAvailable);
+        constraint = msrAvailable < tdsrAvailable ? 'MSR (30%)' : 'TDSR (55%)';
+    } else {
+        maxMonthly = tdsrAvailable;
+        constraint = 'TDSR (55%)';
+    }
+
+    // Max loan from affordability (using stress test rate)
+    const maxLoanAfford = maxLoanFromPayment(maxMonthly, stressRate, tenure);
+
+    // LTV
+    const ltv = getLTV(outstandingLoans, loanType);
+
+    // Max property price from LTV and loan
+    const maxPropertyFromLoan = ltv > 0 ? maxLoanAfford / ltv : 0;
+
+    // Actual monthly payment at real interest rate
+    const actualMonthly = monthlyPaymentForLoan(maxLoanAfford, interestRate, tenure);
+    const totalPaid = actualMonthly * tenure * 12;
+    const totalInterest = totalPaid - maxLoanAfford;
+
+    // Display
+    document.getElementById('maxLoan').textContent = fmt(maxLoanAfford);
+    document.getElementById('monthlyPayment').textContent = fmt(actualMonthly) + '/mo';
+    document.getElementById('totalInterest').textContent = fmt(totalInterest);
+    document.getElementById('ltvRatio').textContent = (ltv * 100) + '%';
+    document.getElementById('maxProperty').textContent = ltv > 0 ? fmt(maxPropertyFromLoan) : 'N/A';
+    document.getElementById('tdsrLimit').textContent = fmt(tdsrMax) + '/mo';
+    document.getElementById('tdsrAvailable').textContent = fmt(tdsrAvailable) + '/mo';
+    document.getElementById('stressRate').textContent = stressRate.toFixed(1) + '% p.a.';
+    document.getElementById('bindingConstraint').textContent = constraint;
+
+    const msrRow = document.getElementById('msrRow');
+    if (msrApplies) {
+        msrRow.style.display = 'flex';
+        document.getElementById('msrLimit').textContent = fmt(msrMax) + '/mo';
+    } else {
+        msrRow.style.display = 'none';
+    }
+
+    // Notes
+    const notes = [];
+    if (ltv === 0) notes.push('HDB loans are not available if you have outstanding home loans.');
+    if (outstandingLoans > 0) notes.push('Lower LTV applies due to existing outstanding home loan(s). Higher cash/CPF down payment required.');
+    notes.push('Stress test rate of ' + stressRate.toFixed(1) + '% is used for TDSR/MSR calculations per MAS guidelines.');
+    notes.push('This calculator provides estimates only. Consult a bank or mortgage broker for exact figures.');
+    document.getElementById('noteBox').innerHTML = notes.join('<br>');
+
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
