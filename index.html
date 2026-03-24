@@ -158,6 +158,45 @@
         .verdict-yellow{background:var(--warning-bg);color:var(--warning)}
         .verdict-red{background:var(--danger-bg);color:var(--danger)}
 
+        /* ── Time Machine tab ── */
+        .tm-controls{display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:1.25rem}
+        .tm-control-card{flex:1;min-width:220px;background:var(--surface);border-radius:var(--radius);padding:1.15rem 1.25rem;box-shadow:var(--shadow);border:1px solid var(--border-light)}
+        .tm-control-card h3{font-size:.82rem;font-weight:700;color:var(--text-secondary);margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.03em;border:none;padding:0}
+        .tm-slider-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem}
+        .tm-slider-row input[type="range"]{flex:1;accent-color:var(--primary);height:6px;cursor:pointer}
+        .tm-slider-val{min-width:55px;text-align:right;font-weight:700;font-size:.95rem;color:var(--primary);font-variant-numeric:tabular-nums}
+        .tm-slider-label{font-size:.8rem;color:var(--text-secondary);font-weight:500}
+        .tm-prepay-row{display:flex;gap:.5rem;align-items:end;margin-bottom:.5rem}
+        .tm-prepay-row input,.tm-prepay-row select{padding:.45rem .6rem;font-size:.85rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-family:inherit}
+        .tm-prepay-row input{flex:1}
+        .tm-prepay-row .btn{padding:.45rem .85rem;font-size:.8rem;white-space:nowrap}
+        .tm-chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.35rem}
+        .tm-chip{display:inline-flex;align-items:center;gap:.35rem;padding:3px 10px;border-radius:999px;background:var(--primary-light);color:var(--primary-dark);font-size:.75rem;font-weight:600}
+        .tm-chip button{background:none;border:none;color:var(--danger);font-size:.85rem;cursor:pointer;padding:0;line-height:1}
+        .tm-dashboard{display:flex;flex-wrap:wrap;gap:.85rem;margin-bottom:1.25rem}
+        .tm-stat{flex:1;min-width:140px;background:var(--surface);border-radius:var(--radius);padding:1rem 1.15rem;box-shadow:var(--shadow);border:1px solid var(--border-light);text-align:center}
+        .tm-stat .tm-stat-value{font-size:1.35rem;font-weight:800;color:var(--primary);font-variant-numeric:tabular-nums;line-height:1.2}
+        .tm-stat .tm-stat-label{font-size:.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-top:.3rem}
+        .tm-stat.good .tm-stat-value{color:var(--success)}
+        .tm-stat.warn .tm-stat-value{color:var(--warning)}
+        .tm-stat.bad .tm-stat-value{color:var(--danger)}
+        .tm-chart-wrap{background:var(--surface);border-radius:var(--radius);padding:1.25rem;box-shadow:var(--shadow);border:1px solid var(--border-light);margin-bottom:1.25rem;overflow:hidden}
+        .tm-chart-wrap h3{font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:.75rem;border:none;padding:0}
+        .tm-chart-wrap svg{width:100%;display:block}
+        .tm-legend{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;margin-top:.75rem;font-size:.78rem;font-weight:600;color:var(--text-secondary)}
+        .tm-legend-dot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:4px;vertical-align:middle}
+        .tm-tooltip{position:absolute;background:var(--text);color:#fff;padding:.5rem .75rem;border-radius:var(--radius-sm);font-size:.78rem;pointer-events:none;z-index:50;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.2);opacity:0;transition:opacity .15s}
+        .tm-tooltip.visible{opacity:1}
+        .tm-breakeven-wrap{background:var(--surface);border-radius:var(--radius);padding:1.15rem 1.25rem;box-shadow:var(--shadow);border:1px solid var(--border-light)}
+        .tm-breakeven-wrap h3{font-size:.82rem;font-weight:700;color:var(--text-secondary);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.03em;border:none;padding:0}
+        .tm-breakeven-result{font-size:.9rem;color:var(--text);line-height:1.6}
+        .tm-breakeven-result strong{color:var(--primary)}
+        @media(max-width:640px){
+            .tm-controls{flex-direction:column}
+            .tm-dashboard{flex-direction:column}
+            .tm-prepay-row{flex-direction:column;align-items:stretch}
+        }
+
         /* Dark mode toggle */
         .theme-toggle{position:fixed;top:calc(1rem + env(safe-area-inset-top));right:1rem;z-index:100;width:40px;height:40px;border:none;border-radius:50%;background:var(--surface);box-shadow:var(--shadow);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:all .2s;border:1px solid var(--border-light)}
         .theme-toggle:hover{box-shadow:var(--shadow-lg);transform:scale(1.05)}
@@ -182,7 +221,7 @@
     <div class="header">
         <h1>Singapore Mortgage Calculator</h1>
         <p>Bank-specific rules, joint applications, age-tenure LTV &amp; CPF</p>
-        <p style="font-size:.72rem;color:var(--text-muted);margin-top:.2rem">v1.0.0</p>
+        <p style="font-size:.72rem;color:var(--text-muted);margin-top:.2rem">v1.1.0</p>
         <div class="header-buttons">
             <button class="btn btn-primary" onclick="saveBaseline()">Save Baseline</button>
             <button class="btn btn-muted" onclick="resetDefaults()">Reset to Defaults</button>
@@ -193,6 +232,7 @@
     <div class="tab-bar">
         <button class="tab-btn active" id="tabBtnCalculator" onclick="switchTab('Calculator')">Calculator</button>
         <button class="tab-btn" id="tabBtnAffordability" onclick="switchTab('Affordability')">Affordability Scenarios</button>
+        <button class="tab-btn" id="tabBtnTimeMachine" onclick="switchTab('TimeMachine')">Time Machine</button>
     </div>
 
     <!-- CALCULATOR TAB -->
@@ -486,6 +526,73 @@
         </div>
     </div>
 
+    <!-- TIME MACHINE TAB -->
+    <div id="tabTimeMachine" style="display:none">
+        <div class="affordability-note">Visualise your mortgage over time. Adjust rates, add prepayments, and see how your decisions affect total interest and loan duration.</div>
+
+        <!-- Dashboard cards -->
+        <div class="tm-dashboard">
+            <div class="tm-stat" id="tmStatMonthly"><div class="tm-stat-value" id="tmValMonthly">-</div><div class="tm-stat-label">Monthly Payment</div></div>
+            <div class="tm-stat good" id="tmStatSaved"><div class="tm-stat-value" id="tmValSaved">-</div><div class="tm-stat-label">Interest Saved</div></div>
+            <div class="tm-stat good" id="tmStatMonths"><div class="tm-stat-value" id="tmValMonths">-</div><div class="tm-stat-label">Months Saved</div></div>
+            <div class="tm-stat" id="tmStatSensitivity"><div class="tm-stat-value" id="tmValSensitivity">-</div><div class="tm-stat-label">Rate Sensitivity</div></div>
+        </div>
+
+        <!-- Controls -->
+        <div class="tm-controls">
+            <div class="tm-control-card">
+                <h3>Rate Shock Simulator</h3>
+                <div class="tm-slider-label">What if rates change to:</div>
+                <div class="tm-slider-row">
+                    <input type="range" id="tmRateSlider" min="1" max="8" step="0.1" value="3.5">
+                    <span class="tm-slider-val" id="tmRateVal">3.5%</span>
+                </div>
+                <div class="tm-slider-label">Rate changes after year:</div>
+                <div class="tm-slider-row">
+                    <input type="range" id="tmRateYear" min="1" max="30" step="1" value="3">
+                    <span class="tm-slider-val" id="tmRateYearVal">Year 3</span>
+                </div>
+            </div>
+            <div class="tm-control-card">
+                <h3>Lump-Sum Prepayments</h3>
+                <div class="tm-prepay-row">
+                    <div class="form-group" style="margin:0;flex:1">
+                        <label for="tmPrepayAmt" style="font-size:.75rem">Amount (SGD)</label>
+                        <input type="number" id="tmPrepayAmt" value="50000" min="1000" step="1000" inputmode="numeric">
+                    </div>
+                    <div class="form-group" style="margin:0;flex:1">
+                        <label for="tmPrepayYear" style="font-size:.75rem">At Year</label>
+                        <input type="number" id="tmPrepayYear" value="5" min="1" max="30" inputmode="numeric">
+                    </div>
+                    <button class="btn btn-primary" onclick="addPrepayment()" style="margin-bottom:0;align-self:end">Add</button>
+                </div>
+                <div class="tm-chips" id="tmPrepayChips"></div>
+            </div>
+            <div class="tm-breakeven-wrap">
+                <h3>Break-Even vs. Renting</h3>
+                <div class="tm-slider-label" style="margin-bottom:.4rem">Monthly rent you'd pay instead:</div>
+                <div class="tm-slider-row">
+                    <input type="range" id="tmRentSlider" min="500" max="8000" step="100" value="2500">
+                    <span class="tm-slider-val" id="tmRentVal">$2,500</span>
+                </div>
+                <div class="tm-breakeven-result" id="tmBreakevenResult">-</div>
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="tm-chart-wrap" style="position:relative">
+            <h3>Amortization Timeline</h3>
+            <svg id="tmChart" viewBox="0 0 800 360" preserveAspectRatio="xMidYMid meet"></svg>
+            <div class="tm-legend">
+                <span><span class="tm-legend-dot" style="background:#4361ee"></span>Principal Paid</span>
+                <span><span class="tm-legend-dot" style="background:#7c3aed"></span>Interest Paid</span>
+                <span><span class="tm-legend-dot" style="background:var(--border)"></span>Remaining Balance</span>
+                <span><span class="tm-legend-dot" style="background:#f59e0b;border:1.5px dashed #f59e0b"></span>Original (ghost)</span>
+            </div>
+            <div class="tm-tooltip" id="tmTooltip"></div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -507,8 +614,12 @@ const DOM_IDS = ['bank','age1','fixedIncome1','variableIncome1','investIncome1',
     'incomeBody','bankLabel','tdsrBody','msrSection','msrBody','bindingConstraint','maxMonthlyDisplay','stressRate',
     'ageLtvBody','cpfCard','cpfBody','cpfNote','maxLoan','monthlyPayment','totalInterest','ltvDisplay',
     'maxProperty','maxPropBody','maxPropNote','noteBox',
-    'tabCalculator','tabAffordability','tabBtnCalculator','tabBtnAffordability',
-    'scenarioTable','scenarioTHead','scenarioTBody','scenarioResultsBody','themeToggle'];
+    'tabCalculator','tabAffordability','tabTimeMachine','tabBtnCalculator','tabBtnAffordability','tabBtnTimeMachine',
+    'scenarioTable','scenarioTHead','scenarioTBody','scenarioResultsBody','themeToggle',
+    'tmChart','tmTooltip','tmRateSlider','tmRateVal','tmRateYear','tmRateYearVal',
+    'tmRentSlider','tmRentVal','tmBreakevenResult','tmPrepayAmt','tmPrepayYear','tmPrepayChips',
+    'tmValMonthly','tmValSaved','tmValMonths','tmValSensitivity',
+    'tmStatSaved','tmStatMonths','tmStatSensitivity'];
 
 function cacheDom() {
     DOM_IDS.forEach(id => { $[id] = document.getElementById(id); });
@@ -977,19 +1088,15 @@ function resetDefaults() {
 
 /* ── Tab switching ── */
 function switchTab(tabName) {
-    if (tabName === 'Calculator') {
-        $.tabCalculator.style.display = '';
-        $.tabAffordability.style.display = 'none';
-        $.tabBtnCalculator.classList.add('active');
-        $.tabBtnAffordability.classList.remove('active');
-    } else {
-        $.tabCalculator.style.display = 'none';
-        $.tabAffordability.style.display = '';
-        $.tabBtnCalculator.classList.remove('active');
-        $.tabBtnAffordability.classList.add('active');
-        // recalc all scenarios with latest baseline
-        renderAndCalcAll();
-    }
+    const tabs = ['Calculator','Affordability','TimeMachine'];
+    const tabEls = { Calculator: $.tabCalculator, Affordability: $.tabAffordability, TimeMachine: $.tabTimeMachine };
+    const btnEls = { Calculator: $.tabBtnCalculator, Affordability: $.tabBtnAffordability, TimeMachine: $.tabBtnTimeMachine };
+    tabs.forEach(t => {
+        tabEls[t].style.display = t === tabName ? '' : 'none';
+        btnEls[t].classList.toggle('active', t === tabName);
+    });
+    if (tabName === 'Affordability') renderAndCalcAll();
+    if (tabName === 'TimeMachine') renderTimeMachine();
 }
 
 /* ── Affordability Scenarios ── */
@@ -1228,6 +1335,323 @@ function renderAndCalcAll() {
     $.scenarioResultsBody.innerHTML = buildResultsHTML(results);
 }
 
+/* ── Time Machine ── */
+let tmPrepayments = []; // [{year, amount}]
+
+function addPrepayment() {
+    const amt = parseFloat($.tmPrepayAmt.value) || 0;
+    const yr = parseInt($.tmPrepayYear.value) || 5;
+    if (amt < 1000) return;
+    tmPrepayments.push({ year: yr, amount: amt });
+    tmPrepayments.sort((a, b) => a.year - b.year);
+    renderTimeMachine();
+}
+
+function removePrepayment(idx) {
+    tmPrepayments.splice(idx, 1);
+    renderTimeMachine();
+}
+
+function buildAmortSchedule(principal, annualRate, tenureYears, rateChangeYear, newRate, prepayments) {
+    const months = tenureYears * 12;
+    let balance = principal;
+    let r = annualRate / 100 / 12;
+    let pmt = r === 0 ? principal / months : principal * r * Math.pow(1 + r, months) / (Math.pow(1 + r, months) - 1);
+    const schedule = []; // each entry: {month, principalPaid, interestPaid, cumPrincipal, cumInterest, balance}
+    let cumP = 0, cumI = 0;
+    let totalMonths = 0;
+
+    for (let m = 1; m <= months && balance > 0.01; m++) {
+        // Rate change
+        if (rateChangeYear > 0 && m === rateChangeYear * 12 + 1) {
+            r = newRate / 100 / 12;
+            const remainingMonths = months - m + 1;
+            pmt = r === 0 ? balance / remainingMonths : balance * r * Math.pow(1 + r, remainingMonths) / (Math.pow(1 + r, remainingMonths) - 1);
+        }
+
+        const interestPortion = balance * r;
+        let principalPortion = Math.min(pmt - interestPortion, balance);
+        balance -= principalPortion;
+
+        // Prepayments at start of year
+        for (const pp of prepayments) {
+            if (m === pp.year * 12 && balance > 0) {
+                const ppAmt = Math.min(pp.amount, balance);
+                balance -= ppAmt;
+                principalPortion += ppAmt;
+                // Recalculate payment for remaining
+                const remMonths = months - m;
+                if (remMonths > 0 && balance > 0) {
+                    pmt = r === 0 ? balance / remMonths : balance * r * Math.pow(1 + r, remMonths) / (Math.pow(1 + r, remMonths) - 1);
+                }
+            }
+        }
+
+        cumP += principalPortion;
+        cumI += interestPortion;
+        totalMonths = m;
+
+        schedule.push({
+            month: m,
+            principalPaid: principalPortion,
+            interestPaid: interestPortion,
+            cumPrincipal: cumP,
+            cumInterest: cumI,
+            balance: Math.max(0, balance)
+        });
+
+        if (balance <= 0.01) break;
+    }
+    return schedule;
+}
+
+function renderTimeMachine() {
+    const inc = assessIncome();
+    const propertyType = $.propertyType.value;
+    const tenure = Math.min(Math.max(parseFloat($.tenure.value) || 25, 1), 30);
+    const interestRate = parseFloat($.interestRate.value) || 3.5;
+    const outstandingLoans = parseInt($.outstandingLoans.value);
+    const loanType = $.loanType.value;
+    const oldestAge = inc.oldestAge;
+
+    // Compute effective tenure (same logic as calculate())
+    const agePlusTenure = oldestAge + tenure;
+    const exceeds65 = agePlusTenure > 65;
+    const keepTenure = $.ageTenureMode.value === 'reduceLTV';
+    const maxTenureFor65 = Math.max(1, 65 - oldestAge);
+    let effectiveTenure = tenure;
+    let ltvApplied;
+    const ltvNormal = getLTV(outstandingLoans, loanType, false);
+    const ltvReduced = getLTV(outstandingLoans, loanType, true);
+    if (exceeds65) {
+        if (keepTenure) { effectiveTenure = tenure; ltvApplied = ltvReduced; }
+        else { effectiveTenure = maxTenureFor65; ltvApplied = ltvNormal; }
+    } else { ltvApplied = ltvNormal; }
+
+    // Stress rate & max loan
+    const stressRate = loanType === 'hdb' ? interestRate : Math.max(4.0, interestRate + 0.5);
+    const tdsrCap = inc.totalAssessedIncome * 0.55;
+    const tdsrAvailable = Math.max(0, tdsrCap - inc.totalDebt);
+    const msrApplies = propertyType === 'hdb' || propertyType === 'ec';
+    const msrAvailable = msrApplies ? Math.max(0, inc.totalAssessedIncome * 0.30 - inc.totalDebt) : Infinity;
+    const maxMonthly = Math.min(tdsrAvailable, msrAvailable);
+    const maxLoan = maxLoanFromPayment(maxMonthly, stressRate, effectiveTenure);
+
+    if (maxLoan <= 0 || ltvApplied <= 0) {
+        $.tmChart.innerHTML = '<text x="400" y="180" text-anchor="middle" fill="var(--text-muted)" font-size="14">Enter income details in Calculator tab first</text>';
+        return;
+    }
+
+    // Sync slider ranges to effective tenure
+    $.tmRateYear.max = effectiveTenure;
+    $.tmRateSlider.value = $.tmRateSlider.value || interestRate;
+    const shockRate = parseFloat($.tmRateSlider.value);
+    const shockYear = parseInt($.tmRateYear.value);
+    $.tmRateVal.textContent = shockRate.toFixed(1) + '%';
+    $.tmRateYearVal.textContent = 'Year ' + shockYear;
+
+    const rentAmount = parseInt($.tmRentSlider.value) || 2500;
+    $.tmRentVal.textContent = '$' + rentAmount.toLocaleString('en-SG');
+
+    // Render prepayment chips
+    let chipHTML = '';
+    tmPrepayments.forEach((pp, i) => {
+        chipHTML += `<span class="tm-chip">SGD ${pp.amount.toLocaleString('en-SG')} @ Yr ${pp.year} <button onclick="removePrepayment(${i})">&times;</button></span>`;
+    });
+    $.tmPrepayChips.innerHTML = chipHTML;
+
+    // Build schedules
+    const baseline = buildAmortSchedule(maxLoan, interestRate, effectiveTenure, 0, interestRate, []);
+    const modified = buildAmortSchedule(maxLoan, interestRate, effectiveTenure, shockYear, shockRate, tmPrepayments);
+
+    // Dashboard stats
+    const baseTotal = baseline.length > 0 ? baseline[baseline.length - 1].cumInterest : 0;
+    const modTotal = modified.length > 0 ? modified[modified.length - 1].cumInterest : 0;
+    const interestSaved = baseTotal - modTotal;
+    const monthsSaved = baseline.length - modified.length;
+
+    const actualMonthly = monthlyPayment(maxLoan, interestRate, effectiveTenure);
+    $.tmValMonthly.textContent = fmt(actualMonthly) + '/mo';
+
+    $.tmValSaved.textContent = interestSaved >= 0 ? fmt(interestSaved) : '−' + fmt(Math.abs(interestSaved));
+    $.tmStatSaved.className = 'tm-stat ' + (interestSaved > 0 ? 'good' : interestSaved < 0 ? 'bad' : '');
+
+    $.tmValMonths.textContent = monthsSaved >= 0 ? monthsSaved + ' months' : '−' + Math.abs(monthsSaved) + ' months';
+    $.tmStatMonths.className = 'tm-stat ' + (monthsSaved > 0 ? 'good' : monthsSaved < 0 ? 'bad' : '');
+
+    // Rate sensitivity: how much does a 1% rise cost over life of loan
+    const plus1 = buildAmortSchedule(maxLoan, interestRate + 1, effectiveTenure, 0, interestRate + 1, []);
+    const plus1Interest = plus1.length > 0 ? plus1[plus1.length - 1].cumInterest : 0;
+    const sensitivityCost = plus1Interest - baseTotal;
+    const sensitivityPct = baseTotal > 0 ? (sensitivityCost / baseTotal * 100) : 0;
+    let sensitivityLabel, sensitivityClass;
+    if (sensitivityPct < 15) { sensitivityLabel = 'Low'; sensitivityClass = 'good'; }
+    else if (sensitivityPct < 30) { sensitivityLabel = 'Medium'; sensitivityClass = 'warn'; }
+    else { sensitivityLabel = 'High'; sensitivityClass = 'bad'; }
+    $.tmValSensitivity.textContent = sensitivityLabel;
+    $.tmStatSensitivity.className = 'tm-stat ' + sensitivityClass;
+
+    // Break-even vs renting
+    const totalMortgageCost = modTotal + maxLoan; // total paid = principal + interest
+    const totalRent = rentAmount * modified.length;
+    const equityAtEnd = maxLoan; // you own the property worth at least loan value
+    const netCostBuying = totalMortgageCost - equityAtEnd; // net = interest only
+    const breakMonth = (() => {
+        let rentCum = 0, buyCum = 0;
+        for (let i = 0; i < modified.length; i++) {
+            rentCum += rentAmount;
+            buyCum += modified[i].interestPaid; // net cost of buying = just interest (principal builds equity)
+            if (buyCum < rentCum) return i + 1;
+        }
+        return -1;
+    })();
+
+    if (breakMonth > 0) {
+        const yrs = Math.floor(breakMonth / 12);
+        const mos = breakMonth % 12;
+        $.tmBreakevenResult.innerHTML = `Buying beats renting after <strong>${yrs > 0 ? yrs + ' year' + (yrs > 1 ? 's' : '') : ''}${yrs > 0 && mos > 0 ? ' ' : ''}${mos > 0 ? mos + ' month' + (mos > 1 ? 's' : '') : ''}</strong>.<br>Total rent over loan life: <strong>${fmt(totalRent)}</strong> vs net interest cost: <strong>${fmt(modTotal)}</strong>.`;
+    } else {
+        $.tmBreakevenResult.innerHTML = `At <strong>${fmt(rentAmount)}/mo</strong> rent, renting may be cheaper. Total rent: <strong>${fmt(totalRent)}</strong> vs interest paid: <strong>${fmt(modTotal)}</strong>.`;
+    }
+
+    // ── Draw SVG chart ──
+    drawTMChart(baseline, modified, maxLoan, effectiveTenure);
+}
+
+function drawTMChart(baseline, modified, maxLoan, tenure) {
+    const W = 800, H = 360;
+    const pad = { top: 20, right: 20, bottom: 40, left: 65 };
+    const cw = W - pad.left - pad.right;
+    const ch = H - pad.top - pad.bottom;
+
+    const totalMonths = tenure * 12;
+    const maxVal = maxLoan * 1.05;
+
+    const xScale = (m) => pad.left + (m / totalMonths) * cw;
+    const yScale = (v) => pad.top + ch - (v / maxVal) * ch;
+
+    // Build paths
+    // Baseline ghost: remaining balance
+    let ghostPath = `M ${xScale(0)} ${yScale(maxLoan)}`;
+    baseline.forEach(p => { ghostPath += ` L ${xScale(p.month)} ${yScale(p.balance)}`; });
+
+    // Modified: stacked area — bottom = interest (cumulative), top = principal (cumulative)
+    // We'll show: balance area (top), cumulative principal paid, cumulative interest paid
+    // Actually, let's do a balance line + stacked bars showing where money went
+
+    // Balance line for modified
+    let modBalancePath = `M ${xScale(0)} ${yScale(maxLoan)}`;
+    modified.forEach(p => { modBalancePath += ` L ${xScale(p.month)} ${yScale(p.balance)}`; });
+
+    // Stacked area: cumulative principal + cumulative interest = total paid
+    // Bottom area = cumInterest, top area = cumInterest + cumPrincipal
+    // Scale to max loan for visual coherence
+    const lastMod = modified[modified.length - 1] || { cumPrincipal: 0, cumInterest: 0 };
+    const maxStack = Math.max(lastMod.cumPrincipal + lastMod.cumInterest, maxLoan);
+
+    const yStack = (v) => pad.top + ch - (v / maxStack) * ch;
+
+    // Interest area (bottom)
+    let interestArea = `M ${xScale(0)} ${yStack(0)}`;
+    modified.forEach(p => { interestArea += ` L ${xScale(p.month)} ${yStack(p.cumInterest)}`; });
+    interestArea += ` L ${xScale(modified.length > 0 ? modified[modified.length - 1].month : 0)} ${yStack(0)} Z`;
+
+    // Principal area (on top of interest)
+    let principalArea = `M ${xScale(0)} ${yStack(0)}`;
+    modified.forEach(p => { principalArea += ` L ${xScale(p.month)} ${yStack(p.cumInterest)}`; });
+    // Go back along the top edge
+    for (let i = modified.length - 1; i >= 0; i--) {
+        const p = modified[i];
+        principalArea += ` L ${xScale(p.month)} ${yStack(p.cumInterest + p.cumPrincipal)}`;
+    }
+    principalArea += ` L ${xScale(0)} ${yStack(0)} Z`;
+
+    // Balance area fill (light)
+    let balanceArea = `M ${xScale(0)} ${yStack(maxLoan)}`;
+    modified.forEach(p => { balanceArea += ` L ${xScale(p.month)} ${yStack(p.balance)}`; });
+    const lastMonth = modified.length > 0 ? modified[modified.length - 1].month : 0;
+    balanceArea += ` L ${xScale(lastMonth)} ${yStack(maxStack)}`;
+    balanceArea += ` L ${xScale(0)} ${yStack(maxStack)} Z`;
+
+    // Y-axis labels
+    const yTicks = 5;
+    let axisHTML = '';
+    for (let i = 0; i <= yTicks; i++) {
+        const val = (maxStack / yTicks) * i;
+        const y = yStack(val);
+        axisHTML += `<line x1="${pad.left}" y1="${y}" x2="${W - pad.right}" y2="${y}" stroke="var(--border)" stroke-width="0.5" stroke-dasharray="4,3"/>`;
+        axisHTML += `<text x="${pad.left - 8}" y="${y + 4}" text-anchor="end" fill="var(--text-muted)" font-size="10" font-family="inherit">${Math.round(val / 1000)}k</text>`;
+    }
+
+    // X-axis labels (years)
+    const xStep = tenure <= 10 ? 1 : tenure <= 20 ? 2 : 5;
+    for (let yr = 0; yr <= tenure; yr += xStep) {
+        const x = xScale(yr * 12);
+        axisHTML += `<text x="${x}" y="${H - pad.bottom + 18}" text-anchor="middle" fill="var(--text-muted)" font-size="10" font-family="inherit">Yr ${yr}</text>`;
+        if (yr > 0) axisHTML += `<line x1="${x}" y1="${pad.top}" x2="${x}" y2="${H - pad.bottom}" stroke="var(--border)" stroke-width="0.5" stroke-dasharray="2,4"/>`;
+    }
+
+    // Prepayment markers
+    let markersHTML = '';
+    tmPrepayments.forEach(pp => {
+        if (pp.year <= tenure) {
+            const x = xScale(pp.year * 12);
+            markersHTML += `<line x1="${x}" y1="${pad.top}" x2="${x}" y2="${H - pad.bottom}" stroke="var(--success)" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+            markersHTML += `<text x="${x}" y="${pad.top - 5}" text-anchor="middle" fill="var(--success)" font-size="9" font-weight="700" font-family="inherit">-${Math.round(pp.amount / 1000)}k</text>`;
+        }
+    });
+
+    // Rate change marker
+    const shockYear = parseInt($.tmRateYear.value);
+    const shockRate = parseFloat($.tmRateSlider.value);
+    if (Math.abs(shockRate - (parseFloat($.interestRate.value) || 3.5)) > 0.01 && shockYear <= tenure) {
+        const x = xScale(shockYear * 12);
+        markersHTML += `<line x1="${x}" y1="${pad.top}" x2="${x}" y2="${H - pad.bottom}" stroke="var(--warning)" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+        markersHTML += `<text x="${x}" y="${pad.top - 5}" text-anchor="middle" fill="var(--warning)" font-size="9" font-weight="700" font-family="inherit">${shockRate.toFixed(1)}%</text>`;
+    }
+
+    // Hover overlay
+    const hoverHTML = `<rect x="${pad.left}" y="${pad.top}" width="${cw}" height="${ch}" fill="transparent" id="tmHoverZone"/>`;
+
+    $.tmChart.innerHTML = `
+        ${axisHTML}
+        <path d="${balanceArea}" fill="var(--border)" opacity="0.2"/>
+        <path d="${interestArea}" fill="#7c3aed" opacity="0.35"/>
+        <path d="${principalArea}" fill="#4361ee" opacity="0.4"/>
+        <path d="${ghostPath}" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.6"/>
+        <path d="${modBalancePath}" fill="none" stroke="var(--text-secondary)" stroke-width="2"/>
+        ${markersHTML}
+        ${hoverHTML}
+    `;
+
+    // Hover interaction
+    const hoverZone = document.getElementById('tmHoverZone');
+    const tooltip = $.tmTooltip;
+    if (hoverZone) {
+        hoverZone.addEventListener('mousemove', (e) => {
+            const rect = $.tmChart.getBoundingClientRect();
+            const svgX = (e.clientX - rect.left) / rect.width * W;
+            const month = Math.round(((svgX - pad.left) / cw) * totalMonths);
+            if (month < 1 || month > modified.length) { tooltip.classList.remove('visible'); return; }
+            const d = modified[month - 1];
+            const bd = month <= baseline.length ? baseline[month - 1] : null;
+            const yr = Math.floor((month - 1) / 12);
+            const mo = ((month - 1) % 12) + 1;
+            let html = `<strong>Year ${yr}, Month ${mo}</strong><br>`;
+            html += `Balance: SGD ${Math.round(d.balance).toLocaleString('en-SG')}<br>`;
+            html += `Principal paid: SGD ${Math.round(d.cumPrincipal).toLocaleString('en-SG')}<br>`;
+            html += `Interest paid: SGD ${Math.round(d.cumInterest).toLocaleString('en-SG')}`;
+            if (bd) html += `<br><span style="color:#f59e0b">Original balance: SGD ${Math.round(bd.balance).toLocaleString('en-SG')}</span>`;
+            tooltip.innerHTML = html;
+            tooltip.classList.add('visible');
+            const tx = e.clientX - rect.left;
+            tooltip.style.left = (tx > rect.width * 0.7 ? tx - 220 : tx + 15) + 'px';
+            tooltip.style.top = (e.clientY - rect.top - 30) + 'px';
+        });
+        hoverZone.addEventListener('mouseleave', () => { tooltip.classList.remove('visible'); });
+    }
+}
+
 /* ── Live calculation on any input change ── */
 (function init() {
     cacheDom();
@@ -1240,6 +1664,13 @@ function renderAndCalcAll() {
         el.addEventListener('change', calculate);
     });
     calculate();
+
+    // Time Machine slider listeners
+    const debouncedTM = debounce(renderTimeMachine, 80);
+    ['tmRateSlider','tmRateYear','tmRentSlider'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.addEventListener('input', debouncedTM); }
+    });
 })();
 
 // Dark mode
