@@ -4,73 +4,102 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Singapore Mortgage Calculator — Enhanced</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root{
+            --bg:#f7f8fc;--surface:#fff;--surface-hover:#fafbfe;
+            --primary:#4361ee;--primary-light:#eef0ff;--primary-dark:#3651d4;
+            --text:#1e293b;--text-secondary:#64748b;--text-muted:#94a3b8;
+            --border:#e2e8f0;--border-light:#f1f5f9;
+            --success:#10b981;--success-bg:#ecfdf5;
+            --danger:#ef4444;--danger-bg:#fef2f2;
+            --warning:#f59e0b;--warning-bg:#fffbeb;
+            --radius:14px;--radius-sm:10px;
+            --shadow:0 1px 3px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.06);
+            --shadow-lg:0 4px 6px rgba(0,0,0,.04),0 10px 24px rgba(0,0,0,.08);
+        }
         *{box-sizing:border-box;margin:0;padding:0}
-        body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;color:#1a202c;line-height:1.6}
-        .container{max-width:800px;margin:2rem auto;padding:0 1rem}
-        h1{text-align:center;margin-bottom:.25rem;font-size:1.8rem;color:#2d3748}
-        .subtitle{text-align:center;color:#718096;margin-bottom:2rem;font-size:.95rem}
-        .card{background:#fff;border-radius:12px;padding:1.5rem 2rem;margin-bottom:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.1)}
-        .card h2{font-size:1.1rem;color:#2b6cb0;margin-bottom:1rem;border-bottom:2px solid #ebf4ff;padding-bottom:.5rem}
-        .card h3{font-size:.95rem;color:#4a5568;margin:1rem 0 .5rem;padding-top:.5rem;border-top:1px dashed #e2e8f0}
-        .form-group{margin-bottom:1rem}
-        label{display:block;font-weight:600;margin-bottom:.25rem;font-size:.9rem}
-        label small{font-weight:400;color:#718096}
+        body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+        .container{max-width:860px;margin:0 auto;padding:2rem 1.25rem 4rem}
+        .header{text-align:center;margin-bottom:2.5rem}
+        .header h1{font-size:2rem;font-weight:700;letter-spacing:-.03em;background:linear-gradient(135deg,var(--primary),#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .header p{color:var(--text-muted);font-size:.9rem;margin-top:.35rem}
+        .card{background:var(--surface);border-radius:var(--radius);padding:1.5rem 1.75rem;margin-bottom:1.25rem;box-shadow:var(--shadow);border:1px solid var(--border-light);transition:box-shadow .2s}
+        .card:hover{box-shadow:var(--shadow-lg)}
+        .card h2{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:1.1rem;padding-bottom:.6rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.5rem}
+        .card h2 .icon{width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0}
+        .card h3{font-size:.88rem;font-weight:600;color:var(--text-secondary);margin:1.1rem 0 .6rem;padding-top:.75rem;border-top:1px dashed var(--border)}
+        .form-group{margin-bottom:.9rem}
+        label{display:block;font-weight:500;margin-bottom:.3rem;font-size:.82rem;color:var(--text-secondary)}
+        label small{font-weight:400;color:var(--text-muted)}
         input[type="number"],select{
-            width:100%;padding:.6rem .75rem;border:1px solid #cbd5e0;
-            border-radius:8px;font-size:1rem;transition:border-color .2s;
+            width:100%;padding:.65rem .85rem;border:1.5px solid var(--border);
+            border-radius:var(--radius-sm);font-size:.95rem;font-family:inherit;
+            background:var(--surface);color:var(--text);transition:all .2s;
         }
-        input:focus,select:focus{outline:none;border-color:#4299e1;box-shadow:0 0 0 3px rgba(66,153,225,.15)}
-        .row{display:flex;gap:1rem}
+        input[type="number"]:hover,select:hover{border-color:#cbd5e1}
+        input:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(67,97,238,.12)}
+        .row{display:flex;gap:.85rem}
         .row .form-group{flex:1}
-        .row3{display:flex;gap:1rem}
+        .row3{display:flex;gap:.85rem}
         .row3 .form-group{flex:1}
-        button{
-            width:100%;padding:.75rem;background:#2b6cb0;color:#fff;border:none;
-            border-radius:8px;font-size:1.05rem;font-weight:600;cursor:pointer;transition:background .2s;
-        }
-        button:hover{background:#2c5282}
-        .toggle-row{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem}
-        .toggle{position:relative;width:48px;height:26px;flex-shrink:0}
+        .toggle-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.85rem;padding:.6rem .85rem;background:var(--primary-light);border-radius:var(--radius-sm)}
+        .toggle{position:relative;width:44px;height:24px;flex-shrink:0}
         .toggle input{opacity:0;width:0;height:0}
-        .toggle .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e0;border-radius:13px;transition:.3s}
-        .toggle .slider:before{content:"";position:absolute;height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
-        .toggle input:checked+.slider{background:#2b6cb0}
-        .toggle input:checked+.slider:before{transform:translateX(22px)}
-        .joint-section{display:none;border-top:2px solid #ebf4ff;padding-top:1rem;margin-top:.5rem}
+        .toggle .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e0;border-radius:12px;transition:.25s}
+        .toggle .slider:before{content:"";position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.25s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+        .toggle input:checked+.slider{background:var(--primary)}
+        .toggle input:checked+.slider:before{transform:translateX(20px)}
+        .joint-section{display:none;border-top:1.5px solid var(--border);padding-top:1rem;margin-top:.5rem}
         .joint-section.active{display:block}
         .results{display:none}
-        .result-row{display:flex;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid #edf2f7;flex-wrap:wrap}
+        .result-row{display:flex;justify-content:space-between;padding:.65rem 0;border-bottom:1px solid var(--border-light);flex-wrap:wrap;align-items:center}
         .result-row:last-child{border-bottom:none}
-        .result-label{color:#4a5568}
-        .result-value{font-weight:700;color:#2d3748}
-        .result-value.highlight{color:#2b6cb0;font-size:1.15rem}
-        .result-value.warning{color:#c53030}
-        .note{background:#fffaf0;border-left:4px solid #ed8936;padding:.75rem 1rem;border-radius:0 8px 8px 0;margin-top:1rem;font-size:.85rem;color:#744210}
-        .breakdown-table{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:.88rem}
-        .breakdown-table th{text-align:left;padding:.4rem .5rem;background:#ebf4ff;color:#2b6cb0;font-weight:600}
-        .breakdown-table td{padding:.4rem .5rem;border-bottom:1px solid #edf2f7}
+        .result-label{color:var(--text-secondary);font-size:.9rem}
+        .result-value{font-weight:700;color:var(--text);font-size:.95rem}
+        .result-value.highlight{color:var(--primary);font-size:1.2rem;font-weight:700}
+        .result-value.warning{color:var(--danger)}
+        .note{background:var(--warning-bg);border-left:3px solid var(--warning);padding:.75rem 1rem;border-radius:0 var(--radius-sm) var(--radius-sm) 0;margin-top:1rem;font-size:.82rem;color:#92400e;line-height:1.55}
+        .breakdown-table{width:100%;border-collapse:separate;border-spacing:0;margin-top:.5rem;font-size:.85rem}
+        .breakdown-table th{text-align:left;padding:.55rem .65rem;background:var(--primary-light);color:var(--primary-dark);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.03em}
+        .breakdown-table th:first-child{border-radius:var(--radius-sm) 0 0 var(--radius-sm)}
+        .breakdown-table th:last-child{border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+        .breakdown-table td{padding:.5rem .65rem;border-bottom:1px solid var(--border-light)}
         .breakdown-table tr:last-child td{border-bottom:none}
-        .breakdown-table .right{text-align:right}
-        .breakdown-table .total-row td{font-weight:700;border-top:2px solid #2b6cb0;background:#f7fafc}
-        .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.75rem;font-weight:600;margin-left:.5rem}
-        .tag-msr{background:#fed7d7;color:#c53030}
-        .tag-tdsr{background:#bee3f8;color:#2a4365}
-        .tag-ltv{background:#c6f6d5;color:#22543d}
-        .cpf-table{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:.88rem}
-        .cpf-table th{text-align:left;padding:.4rem .5rem;background:#f0fff4;color:#276749;font-weight:600}
-        .cpf-table td{padding:.4rem .5rem;border-bottom:1px solid #edf2f7}
-        .info-icon{cursor:help;display:inline-block;width:16px;height:16px;line-height:16px;text-align:center;background:#e2e8f0;color:#4a5568;border-radius:50%;font-size:.7rem;font-weight:700;vertical-align:middle;margin-left:4px}
+        .breakdown-table .right{text-align:right;font-variant-numeric:tabular-nums}
+        .breakdown-table .total-row td{font-weight:700;border-top:2px solid var(--primary);background:var(--primary-light)}
+        .tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.7rem;font-weight:600;margin-left:.4rem;letter-spacing:.02em}
+        .tag-msr{background:var(--danger-bg);color:var(--danger)}
+        .tag-tdsr{background:var(--primary-light);color:var(--primary-dark)}
+        .tag-ltv{background:var(--success-bg);color:var(--success)}
+        .cpf-table{width:100%;border-collapse:separate;border-spacing:0;margin-top:.5rem;font-size:.85rem}
+        .cpf-table th{text-align:left;padding:.55rem .65rem;background:var(--success-bg);color:#065f46;font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.03em}
+        .cpf-table th:first-child{border-radius:var(--radius-sm) 0 0 var(--radius-sm)}
+        .cpf-table th:last-child{border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+        .cpf-table td{padding:.5rem .65rem;border-bottom:1px solid var(--border-light);font-variant-numeric:tabular-nums}
+        .info-icon{cursor:help;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;background:var(--border);color:var(--text-secondary);border-radius:50%;font-size:.65rem;font-weight:700;vertical-align:middle;margin-left:4px;transition:background .2s}
+        .info-icon:hover{background:var(--primary-light);color:var(--primary)}
         .tooltip-wrap{position:relative;display:inline-block}
-        .tooltip-wrap .tip{display:none;position:absolute;bottom:120%;left:50%;transform:translateX(-50%);background:#2d3748;color:#fff;padding:.5rem .75rem;border-radius:6px;font-size:.78rem;font-weight:400;width:260px;z-index:10;line-height:1.4}
+        .tooltip-wrap .tip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:.6rem .85rem;border-radius:var(--radius-sm);font-size:.78rem;font-weight:400;width:280px;z-index:10;line-height:1.5;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+        .tooltip-wrap .tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--text)}
         .tooltip-wrap:hover .tip{display:block}
-        @media(max-width:600px){.row,.row3{flex-direction:column;gap:0}}
+        .section-divider{height:2rem;display:flex;align-items:center;justify-content:center;margin:.5rem 0}
+        .section-divider span{font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;background:var(--bg);padding:0 1rem}
+        @media(max-width:640px){
+            .row,.row3{flex-direction:column;gap:0}
+            .container{padding:1rem .75rem 3rem}
+            .card{padding:1.25rem 1.25rem;border-radius:var(--radius-sm)}
+            .header h1{font-size:1.5rem}
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>Singapore Mortgage Calculator</h1>
-    <p class="subtitle">Enhanced — bank-specific income rules, joint applications, age-tenure LTV &amp; CPF</p>
+    <div class="header">
+        <h1>Singapore Mortgage Calculator</h1>
+        <p>Bank-specific rules, joint applications, age-tenure LTV &amp; CPF</p>
+    </div>
 
     <!-- BANK SELECTION -->
     <div class="card">
@@ -224,7 +253,7 @@
         </div>
     </div>
 
-    <button onclick="calculate()">Calculate Maximum Mortgage</button>
+    <div class="section-divider"><span>Results</span></div>
 
     <!-- RESULTS -->
     <div class="results" id="results">
@@ -413,7 +442,18 @@ function calcBSD(price) {
 function toggleJoint() {
     const on = document.getElementById('jointToggle').checked;
     document.getElementById('jointSection').classList.toggle('active', on);
+    calculate();
 }
+
+/* ── Live calculation on any input change ── */
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('input[type="number"], select');
+    inputs.forEach(el => {
+        el.addEventListener('input', calculate);
+        el.addEventListener('change', calculate);
+    });
+    calculate();
+});
 
 /* ── Main calculation ── */
 function calculate() {
@@ -571,7 +611,35 @@ function calculate() {
     const maxLoan = propertyPrice > 0 ? Math.min(maxLoanAfford, maxLoanLTV) : maxLoanAfford;
     const limitedByLTV = propertyPrice > 0 && maxLoanLTV < maxLoanAfford;
 
-    const maxPropertyFromLoan = ltvApplied > 0 ? maxLoanAfford / ltvApplied : 0;
+    // ── Cash-constrained max property price ──
+    // maxPropertyFromLoan = income-based max, but we also need enough cash+CPF for down payment + BSD
+    // Formula: price = loan + downPayment, where downPayment needs cash + CPF coverage
+    // We iteratively find the max price the user can actually afford given their cash + CPF
+    let maxPropertyFromLoan = ltvApplied > 0 ? maxLoanAfford / ltvApplied : 0;
+    if (ltvApplied > 0 && maxPropertyFromLoan > 0) {
+        const dpPct = 1 - ltvApplied;
+        const mppMinCashPct = outstandingLoans === 0 && loanType === 'bank' ? 0.05 : (outstandingLoans > 0 ? 0.25 : 0);
+        // For a given price P: downPayment = P * dpPct, minCash = P * mppMinCashPct
+        // cpfUsable = min(totalCPF, P*dpPct - P*mppMinCashPct) = min(totalCPF, P*(dpPct - mppMinCashPct))
+        // cashNeeded = P*dpPct - cpfUsable, totalCashNeeded = cashNeeded + BSD(P)
+        // We need totalCashNeeded <= totalCash
+        // Solve by binary search since BSD is non-linear
+        const canAfford = (p) => {
+            const dp = p * dpPct;
+            const cpfUsable = Math.min(totalCPF, Math.max(0, p * (dpPct - mppMinCashPct)));
+            const cashForDP = Math.max(0, dp - cpfUsable);
+            return cashForDP + calcBSD(p) <= totalCash;
+        };
+        if (!canAfford(maxPropertyFromLoan)) {
+            // Binary search for the max price user can actually afford
+            let lo = 0, hi = maxPropertyFromLoan;
+            for (let i = 0; i < 50; i++) {
+                const mid = (lo + hi) / 2;
+                if (canAfford(mid)) lo = mid; else hi = mid;
+            }
+            maxPropertyFromLoan = Math.floor(lo / 1000) * 1000; // round down to nearest 1k
+        }
+    }
 
     // Actual repayment
     const actualMonthly = monthlyPayment(maxLoan, interestRate, effectiveTenure);
@@ -648,24 +716,38 @@ function calculate() {
     if (exceeds65 && !keepTenure) {
         document.getElementById('monthlyPayment').textContent += ' (' + effectiveTenure + '-yr tenure)';
     }
-    document.getElementById('maxProperty').textContent = ltvApplied > 0 ? fmt(maxPropertyFromLoan) : 'N/A (LTV 0%)';
+    if (ltvApplied > 0) {
+        document.getElementById('maxProperty').innerHTML = fmt(maxPropertyFromLoan) + (isCashConstrained ? ' <span class="tag tag-msr">Cash-limited</span>' : '');
+    } else {
+        document.getElementById('maxProperty').textContent = 'N/A (LTV 0%)';
+    }
 
     // ── Max Property Price Breakdown ──
+    const incomeOnlyMax = ltvApplied > 0 ? maxLoanAfford / ltvApplied : 0;
+    const isCashConstrained = maxPropertyFromLoan < incomeOnlyMax;
     if (ltvApplied > 0) {
         const mpp = maxPropertyFromLoan;
-        const mppDownPayment = mpp - maxLoanAfford;
+        const mppLoan = mpp * ltvApplied;
+        const mppDownPayment = mpp - mppLoan;
         const mppMinCashPct = outstandingLoans === 0 && loanType === 'bank' ? 0.05 : (outstandingLoans > 0 ? 0.25 : 0);
         const mppMinCash = mpp * mppMinCashPct;
         const mppCpfForDP = Math.min(totalCPF, Math.max(0, mppDownPayment - mppMinCash));
         const mppCashNeeded = Math.max(0, mppDownPayment - mppCpfForDP);
         const mppBSD = calcBSD(mpp);
         const mppTotalCashUpfront = mppCashNeeded + mppBSD;
+        const mppCashRemaining = Math.max(0, totalCash - mppTotalCashUpfront);
 
         let mpHTML = '';
-        mpHTML += `<tr><td>Max Loan (from income capacity)</td><td class="right">${fmt(maxLoanAfford)}</td></tr>`;
-        mpHTML += `<tr><td>÷ LTV Ratio</td><td class="right">${pct(ltvApplied)}</td></tr>`;
-        mpHTML += `<tr class="total-row"><td>= Estimated Max Property Price</td><td class="right">${fmt(mpp)}</td></tr>`;
+        if (isCashConstrained) {
+            mpHTML += `<tr><td>Income-Based Max Price</td><td class="right">${fmt(incomeOnlyMax)}</td></tr>`;
+            mpHTML += `<tr><td colspan="2" style="color:#c53030;font-size:.85rem">Reduced — insufficient cash for down payment + BSD at that price</td></tr>`;
+        } else {
+            mpHTML += `<tr><td>Max Loan (from income capacity)</td><td class="right">${fmt(maxLoanAfford)}</td></tr>`;
+            mpHTML += `<tr><td>÷ LTV Ratio</td><td class="right">${pct(ltvApplied)}</td></tr>`;
+        }
+        mpHTML += `<tr class="total-row"><td>= Affordable Max Property Price</td><td class="right">${fmt(mpp)}${isCashConstrained ? ' <span class="tag tag-msr">Cash-limited</span>' : ''}</td></tr>`;
         mpHTML += `<tr><td colspan="2" style="padding-top:.75rem;font-weight:600;color:#2b6cb0">Down Payment Breakdown</td></tr>`;
+        mpHTML += `<tr><td>Loan at ${pct(ltvApplied)} LTV</td><td class="right">${fmt(mppLoan)}</td></tr>`;
         mpHTML += `<tr><td>Down Payment (${pct(1 - ltvApplied)})</td><td class="right">${fmt(mppDownPayment)}</td></tr>`;
         if (mppMinCashPct > 0) {
             mpHTML += `<tr><td>Minimum Cash (${pct(mppMinCashPct)} of price)</td><td class="right">${fmt(mppMinCash)}</td></tr>`;
@@ -677,24 +759,16 @@ function calculate() {
         mpHTML += `<tr><td>Buyer's Stamp Duty (BSD)</td><td class="right">${fmt(mppBSD)}</td></tr>`;
         mpHTML += `<tr class="total-row"><td>Total Cash Needed Upfront</td><td class="right">${fmt(mppTotalCashUpfront)}</td></tr>`;
         mpHTML += `<tr><td>Your Available Cash</td><td class="right">${fmt(totalCash)}</td></tr>`;
-        const mppCashShortfall = Math.max(0, mppTotalCashUpfront - totalCash);
-        const mppCashSurplus = Math.max(0, totalCash - mppTotalCashUpfront);
-        if (mppCashShortfall > 0) {
-            mpHTML += `<tr class="total-row"><td>Cash Shortfall</td><td class="right" style="color:#c53030">${fmt(mppCashShortfall)}</td></tr>`;
-        } else {
-            mpHTML += `<tr class="total-row"><td>Cash Remaining</td><td class="right" style="color:#276749">${fmt(mppCashSurplus)}</td></tr>`;
-        }
+        mpHTML += `<tr class="total-row"><td>Cash Remaining</td><td class="right" style="color:#276749">${fmt(mppCashRemaining)}</td></tr>`;
         document.getElementById('maxPropBody').innerHTML = mpHTML;
 
         const mpNotes = [];
-        mpNotes.push('Max property price = max loan ÷ LTV. This is the most expensive property you can finance based on your income.');
-        if (mppCashShortfall > 0) {
-            mpNotes.push('You would need an additional ' + fmt(mppCashShortfall) + ' in cash to afford this max property price. Your effective max may be lower.');
+        if (isCashConstrained) {
+            mpNotes.push('Your max property price is limited by available cash, not income. Increase cash savings or CPF to unlock the full ' + fmt(incomeOnlyMax) + ' income-based capacity.');
+        } else {
+            mpNotes.push('Max property price = max loan ÷ LTV. You have sufficient cash and CPF to cover the down payment and BSD.');
         }
-        if (mppCpfForDP < mppDownPayment - mppMinCash) {
-            mpNotes.push('Your CPF OA balance is insufficient to cover the full non-cash portion of the down payment — additional cash is needed.');
-        }
-        mpNotes.push('BSD is calculated on the standard Singapore scale. ABSD (if applicable) is not included — check if you are subject to ABSD based on residency and number of properties.');
+        mpNotes.push('BSD is calculated on the standard Singapore scale. ABSD (if applicable) is not included.');
         document.getElementById('maxPropNote').innerHTML = mpNotes.join('<br>');
     } else {
         document.getElementById('maxPropBody').innerHTML = '<tr><td colspan="2">LTV is 0% — cannot estimate max property price.</td></tr>';
@@ -718,7 +792,6 @@ function calculate() {
     document.getElementById('noteBox').innerHTML = notes.join('<br>');
 
     document.getElementById('results').style.display = 'block';
-    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
 }
 </script>
 </body>
