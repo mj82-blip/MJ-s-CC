@@ -109,7 +109,7 @@
                 <input type="number" id="variableIncome1" value="24000" min="0" step="1000">
             </div>
         </div>
-        <div class="row">
+        <div class="row3">
             <div class="form-group">
                 <label>Existing Monthly Debt (SGD) <small>car loans, credit cards, etc.</small></label>
                 <input type="number" id="debt1" value="0" min="0" step="50">
@@ -117,6 +117,10 @@
             <div class="form-group">
                 <label>CPF OA Balance (SGD)</label>
                 <input type="number" id="cpfOA1" value="50000" min="0" step="1000">
+            </div>
+            <div class="form-group">
+                <label>Available Cash (SGD) <small>savings for property</small></label>
+                <input type="number" id="cash1" value="50000" min="0" step="1000">
             </div>
         </div>
 
@@ -146,7 +150,7 @@
                     <input type="number" id="variableIncome2" value="12000" min="0" step="1000">
                 </div>
             </div>
-            <div class="row">
+            <div class="row3">
                 <div class="form-group">
                     <label>Existing Monthly Debt (SGD)</label>
                     <input type="number" id="debt2" value="0" min="0" step="50">
@@ -154,6 +158,10 @@
                 <div class="form-group">
                     <label>CPF OA Balance (SGD)</label>
                     <input type="number" id="cpfOA2" value="30000" min="0" step="1000">
+                </div>
+                <div class="form-group">
+                    <label>Available Cash (SGD)</label>
+                    <input type="number" id="cash2" value="30000" min="0" step="1000">
                 </div>
             </div>
         </div>
@@ -244,6 +252,22 @@
                 <span class="result-label">Estimated Max Property Price</span>
                 <span class="result-value highlight" id="maxProperty">-</span>
             </div>
+        </div>
+
+        <!-- MAX PROPERTY PRICE BREAKDOWN -->
+        <div class="card">
+            <h2>Estimated Max Property Price — Breakdown
+                <span class="tooltip-wrap"><span class="info-icon">?</span>
+                    <span class="tip">Shows how the maximum affordable property price is derived from your borrowing capacity and LTV, and what the down payment split would look like at that price.</span>
+                </span>
+            </h2>
+            <table class="breakdown-table">
+                <thead>
+                    <tr><th>Item</th><th class="right">Amount</th></tr>
+                </thead>
+                <tbody id="maxPropBody"></tbody>
+            </table>
+            <div class="note" style="margin-top:.75rem" id="maxPropNote"></div>
         </div>
 
         <!-- INCOME BREAKDOWN -->
@@ -363,6 +387,28 @@ function pct(num) {
     return (num * 100).toFixed(0) + '%';
 }
 
+/* ── Buyer's Stamp Duty (BSD) — Singapore scale ── */
+function calcBSD(price) {
+    // First $180k → 1%, next $180k → 2%, next $640k → 3%, next $500k → 4%, next $1.5m → 5%, remainder → 6%
+    const brackets = [
+        { limit: 180000, rate: 0.01 },
+        { limit: 180000, rate: 0.02 },
+        { limit: 640000, rate: 0.03 },
+        { limit: 500000, rate: 0.04 },
+        { limit: 1500000, rate: 0.05 },
+        { limit: Infinity, rate: 0.06 }
+    ];
+    let remaining = price;
+    let bsd = 0;
+    for (const b of brackets) {
+        const taxable = Math.min(remaining, b.limit);
+        bsd += taxable * b.rate;
+        remaining -= taxable;
+        if (remaining <= 0) break;
+    }
+    return bsd;
+}
+
 /* ── Joint toggle ── */
 function toggleJoint() {
     const on = document.getElementById('jointToggle').checked;
@@ -382,6 +428,7 @@ function calculate() {
     const variable1 = parseFloat(document.getElementById('variableIncome1').value) || 0;
     const debt1 = parseFloat(document.getElementById('debt1').value) || 0;
     const cpfOA1 = parseFloat(document.getElementById('cpfOA1').value) || 0;
+    const cash1 = parseFloat(document.getElementById('cash1').value) || 0;
 
     // Borrower 2 (if joint)
     const age2 = isJoint ? (parseInt(document.getElementById('age2').value) || 33) : null;
@@ -389,6 +436,7 @@ function calculate() {
     const variable2 = isJoint ? (parseFloat(document.getElementById('variableIncome2').value) || 0) : 0;
     const debt2 = isJoint ? (parseFloat(document.getElementById('debt2').value) || 0) : 0;
     const cpfOA2 = isJoint ? (parseFloat(document.getElementById('cpfOA2').value) || 0) : 0;
+    const cash2 = isJoint ? (parseFloat(document.getElementById('cash2').value) || 0) : 0;
 
     // Property & loan
     const propertyType = document.getElementById('propertyType').value;
@@ -540,8 +588,13 @@ function calculate() {
     const cpfAvailable1 = cpfOA1;
     const cpfAvailable2 = isJoint ? cpfOA2 : 0;
     const totalCPF = cpfAvailable1 + cpfAvailable2;
+    const totalCash = cash1 + cash2;
     const cpfForDownPayment = Math.min(totalCPF, Math.max(0, downPayment - minCashAdjusted));
     const cashRequired = Math.max(0, downPayment - cpfForDownPayment);
+    const bsdForProperty = propertyPrice > 0 ? calcBSD(propertyPrice) : 0;
+    const totalCashNeeded = cashRequired + bsdForProperty;
+    const cashShortfall = Math.max(0, totalCashNeeded - totalCash);
+    const cashSurplus = Math.max(0, totalCash - totalCashNeeded);
 
     let cpfHTML = '';
     cpfHTML += `<tr><td>Property Price</td><td class="right">${fmt(propertyPrice)}</td></tr>`;
@@ -553,7 +606,20 @@ function calculate() {
         cpfHTML += `<tr><td>Borrower 2 CPF OA Available</td><td class="right">${fmt(cpfAvailable2)}</td></tr>`;
     }
     cpfHTML += `<tr class="total-row"><td>CPF Usable for Down Payment</td><td class="right">${fmt(cpfForDownPayment)}</td></tr>`;
-    cpfHTML += `<tr class="total-row"><td>Cash Required</td><td class="right">${fmt(cashRequired)}</td></tr>`;
+    cpfHTML += `<tr><td colspan="2" style="padding-top:.75rem;font-weight:600;color:#2b6cb0">Cash Position</td></tr>`;
+    cpfHTML += `<tr><td>Borrower 1 Available Cash</td><td class="right">${fmt(cash1)}</td></tr>`;
+    if (isJoint) {
+        cpfHTML += `<tr><td>Borrower 2 Available Cash</td><td class="right">${fmt(cash2)}</td></tr>`;
+    }
+    cpfHTML += `<tr><td>Total Available Cash</td><td class="right">${fmt(totalCash)}</td></tr>`;
+    cpfHTML += `<tr><td>Cash for Down Payment</td><td class="right">${fmt(cashRequired)}</td></tr>`;
+    cpfHTML += `<tr><td>Buyer's Stamp Duty (BSD)</td><td class="right">${fmt(bsdForProperty)}</td></tr>`;
+    cpfHTML += `<tr class="total-row"><td>Total Cash Needed</td><td class="right">${fmt(totalCashNeeded)}</td></tr>`;
+    if (cashShortfall > 0) {
+        cpfHTML += `<tr class="total-row"><td>Cash Shortfall</td><td class="right" style="color:#c53030">${fmt(cashShortfall)}</td></tr>`;
+    } else {
+        cpfHTML += `<tr class="total-row"><td>Cash Remaining After Purchase</td><td class="right" style="color:#276749">${fmt(cashSurplus)}</td></tr>`;
+    }
     document.getElementById('cpfBody').innerHTML = cpfHTML;
 
     const cpfNotes = [];
@@ -563,7 +629,10 @@ function calculate() {
         cpfNotes.push('With outstanding loans: higher cash down payment required (25% for 2nd property).');
     }
     if (isJoint) {
-        cpfNotes.push('Joint applicants: both CPF OA balances can be used subject to individual withdrawal limits.');
+        cpfNotes.push('Joint applicants: both CPF OA balances and cash can be combined.');
+    }
+    if (cashShortfall > 0) {
+        cpfNotes.push('You are short ' + fmt(cashShortfall) + ' in cash. Consider a lower-priced property or increasing your cash savings.');
     }
     cpfNotes.push('CPF withdrawal limit per person is capped at the property valuation. Amounts above the limit require cash.');
     document.getElementById('cpfNote').innerHTML = cpfNotes.join('<br>');
@@ -580,6 +649,57 @@ function calculate() {
         document.getElementById('monthlyPayment').textContent += ' (' + effectiveTenure + '-yr tenure)';
     }
     document.getElementById('maxProperty').textContent = ltvApplied > 0 ? fmt(maxPropertyFromLoan) : 'N/A (LTV 0%)';
+
+    // ── Max Property Price Breakdown ──
+    if (ltvApplied > 0) {
+        const mpp = maxPropertyFromLoan;
+        const mppDownPayment = mpp - maxLoanAfford;
+        const mppMinCashPct = outstandingLoans === 0 && loanType === 'bank' ? 0.05 : (outstandingLoans > 0 ? 0.25 : 0);
+        const mppMinCash = mpp * mppMinCashPct;
+        const mppCpfForDP = Math.min(totalCPF, Math.max(0, mppDownPayment - mppMinCash));
+        const mppCashNeeded = Math.max(0, mppDownPayment - mppCpfForDP);
+        const mppBSD = calcBSD(mpp);
+        const mppTotalCashUpfront = mppCashNeeded + mppBSD;
+
+        let mpHTML = '';
+        mpHTML += `<tr><td>Max Loan (from income capacity)</td><td class="right">${fmt(maxLoanAfford)}</td></tr>`;
+        mpHTML += `<tr><td>÷ LTV Ratio</td><td class="right">${pct(ltvApplied)}</td></tr>`;
+        mpHTML += `<tr class="total-row"><td>= Estimated Max Property Price</td><td class="right">${fmt(mpp)}</td></tr>`;
+        mpHTML += `<tr><td colspan="2" style="padding-top:.75rem;font-weight:600;color:#2b6cb0">Down Payment Breakdown</td></tr>`;
+        mpHTML += `<tr><td>Down Payment (${pct(1 - ltvApplied)})</td><td class="right">${fmt(mppDownPayment)}</td></tr>`;
+        if (mppMinCashPct > 0) {
+            mpHTML += `<tr><td>Minimum Cash (${pct(mppMinCashPct)} of price)</td><td class="right">${fmt(mppMinCash)}</td></tr>`;
+        }
+        mpHTML += `<tr><td>CPF OA Available (total)</td><td class="right">${fmt(totalCPF)}</td></tr>`;
+        mpHTML += `<tr><td>CPF Usable for Down Payment</td><td class="right">${fmt(mppCpfForDP)}</td></tr>`;
+        mpHTML += `<tr><td>Cash for Down Payment</td><td class="right">${fmt(mppCashNeeded)}</td></tr>`;
+        mpHTML += `<tr><td colspan="2" style="padding-top:.75rem;font-weight:600;color:#2b6cb0">Stamp Duty & Cash Position</td></tr>`;
+        mpHTML += `<tr><td>Buyer's Stamp Duty (BSD)</td><td class="right">${fmt(mppBSD)}</td></tr>`;
+        mpHTML += `<tr class="total-row"><td>Total Cash Needed Upfront</td><td class="right">${fmt(mppTotalCashUpfront)}</td></tr>`;
+        mpHTML += `<tr><td>Your Available Cash</td><td class="right">${fmt(totalCash)}</td></tr>`;
+        const mppCashShortfall = Math.max(0, mppTotalCashUpfront - totalCash);
+        const mppCashSurplus = Math.max(0, totalCash - mppTotalCashUpfront);
+        if (mppCashShortfall > 0) {
+            mpHTML += `<tr class="total-row"><td>Cash Shortfall</td><td class="right" style="color:#c53030">${fmt(mppCashShortfall)}</td></tr>`;
+        } else {
+            mpHTML += `<tr class="total-row"><td>Cash Remaining</td><td class="right" style="color:#276749">${fmt(mppCashSurplus)}</td></tr>`;
+        }
+        document.getElementById('maxPropBody').innerHTML = mpHTML;
+
+        const mpNotes = [];
+        mpNotes.push('Max property price = max loan ÷ LTV. This is the most expensive property you can finance based on your income.');
+        if (mppCashShortfall > 0) {
+            mpNotes.push('You would need an additional ' + fmt(mppCashShortfall) + ' in cash to afford this max property price. Your effective max may be lower.');
+        }
+        if (mppCpfForDP < mppDownPayment - mppMinCash) {
+            mpNotes.push('Your CPF OA balance is insufficient to cover the full non-cash portion of the down payment — additional cash is needed.');
+        }
+        mpNotes.push('BSD is calculated on the standard Singapore scale. ABSD (if applicable) is not included — check if you are subject to ABSD based on residency and number of properties.');
+        document.getElementById('maxPropNote').innerHTML = mpNotes.join('<br>');
+    } else {
+        document.getElementById('maxPropBody').innerHTML = '<tr><td colspan="2">LTV is 0% — cannot estimate max property price.</td></tr>';
+        document.getElementById('maxPropNote').innerHTML = '';
+    }
 
     document.getElementById('bindingConstraint').innerHTML = constraint +
         (constraint.includes('MSR') ? ' <span class="tag tag-msr">MSR</span>' : ' <span class="tag tag-tdsr">TDSR</span>');
