@@ -445,16 +445,6 @@ function toggleJoint() {
     calculate();
 }
 
-/* ── Live calculation on any input change ── */
-(function init() {
-    const inputs = document.querySelectorAll('input[type="number"], select');
-    inputs.forEach(el => {
-        el.addEventListener('input', calculate);
-        el.addEventListener('change', calculate);
-    });
-    calculate();
-})();
-
 /* ── Main calculation ── */
 function calculate() {
     const bank = document.getElementById('bank').value;
@@ -792,6 +782,16 @@ function calculate() {
     document.getElementById('noteBox').innerHTML = notes.join('<br>');
 
 }
+
+/* ── Live calculation on any input change ── */
+(function init() {
+    const inputs = document.querySelectorAll('input[type="number"], select');
+    inputs.forEach(el => {
+        el.addEventListener('input', calculate);
+        el.addEventListener('change', calculate);
+    });
+    calculate();
+})();
 </script>
 </body>
 </html>
