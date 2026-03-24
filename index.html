@@ -202,6 +202,10 @@
         </div>
         <div class="row3">
             <div class="form-group">
+                <label>Investment Annual Income (SGD) <small>distributions/dividends per year</small></label>
+                <input type="number" id="investIncome1" value="0" min="0" step="1000">
+            </div>
+            <div class="form-group">
                 <label>Existing Monthly Debt (SGD) <small>car loans, credit cards, etc.</small></label>
                 <input type="number" id="debt1" value="0" min="0" step="50">
             </div>
@@ -242,6 +246,10 @@
                 </div>
             </div>
             <div class="row3">
+                <div class="form-group">
+                    <label>Investment Annual Income (SGD)</label>
+                    <input type="number" id="investIncome2" value="0" min="0" step="1000">
+                </div>
                 <div class="form-group">
                     <label>Existing Monthly Debt (SGD)</label>
                     <input type="number" id="debt2" value="0" min="0" step="50">
@@ -525,6 +533,7 @@ function calculate() {
     const age1 = parseInt(document.getElementById('age1').value) || 35;
     const fixed1 = parseFloat(document.getElementById('fixedIncome1').value) || 0;
     const variable1 = parseFloat(document.getElementById('variableIncome1').value) || 0;
+    const invest1 = parseFloat(document.getElementById('investIncome1').value) || 0;
     const debt1 = parseFloat(document.getElementById('debt1').value) || 0;
     const cpfOA1 = parseFloat(document.getElementById('cpfOA1').value) || 0;
     const cash1 = parseFloat(document.getElementById('cash1').value) || 0;
@@ -533,6 +542,7 @@ function calculate() {
     const age2 = isJoint ? (parseInt(document.getElementById('age2').value) || 33) : null;
     const fixed2 = isJoint ? (parseFloat(document.getElementById('fixedIncome2').value) || 0) : 0;
     const variable2 = isJoint ? (parseFloat(document.getElementById('variableIncome2').value) || 0) : 0;
+    const invest2 = isJoint ? (parseFloat(document.getElementById('investIncome2').value) || 0) : 0;
     const debt2 = isJoint ? (parseFloat(document.getElementById('debt2').value) || 0) : 0;
     const cpfOA2 = isJoint ? (parseFloat(document.getElementById('cpfOA2').value) || 0) : 0;
     const cash2 = isJoint ? (parseFloat(document.getElementById('cash2').value) || 0) : 0;
@@ -545,26 +555,32 @@ function calculate() {
     const outstandingLoans = parseInt(document.getElementById('outstandingLoans').value);
     const loanType = document.getElementById('loanType').value;
 
-    // ── Income assessment (variable income is annual → convert to monthly) ──
+    // ── Income assessment (variable & investment income is annual → convert to monthly) ──
     const haircut = bankRule.haircut;
     const varMonthly1 = variable1 / 12;
     const varMonthly2 = variable2 / 12;
+    const investMonthly1 = invest1 / 12;
+    const investMonthly2 = invest2 / 12;
     const assessed1Fixed = fixed1;
     const assessed1Var = varMonthly1 * (1 - haircut);
+    const assessed1Invest = investMonthly1 * (1 - haircut);
     const assessed2Fixed = fixed2;
     const assessed2Var = varMonthly2 * (1 - haircut);
+    const assessed2Invest = investMonthly2 * (1 - haircut);
 
-    const totalAssessedIncome = assessed1Fixed + assessed1Var + assessed2Fixed + assessed2Var;
-    const totalGrossMonthly = fixed1 + varMonthly1 + fixed2 + varMonthly2;
+    const totalAssessedIncome = assessed1Fixed + assessed1Var + assessed1Invest + assessed2Fixed + assessed2Var + assessed2Invest;
+    const totalGrossMonthly = fixed1 + varMonthly1 + investMonthly1 + fixed2 + varMonthly2 + investMonthly2;
     const totalDebt = debt1 + debt2;
 
     // ── Income table ──
     const incomeRows = [];
     incomeRows.push(['Borrower 1 — Fixed (monthly)', fixed1, 0, assessed1Fixed]);
     incomeRows.push(['Borrower 1 — Variable (' + fmt(variable1) + '/yr ÷ 12)', varMonthly1, haircut, assessed1Var]);
+    if (invest1 > 0) incomeRows.push(['Borrower 1 — Investment (' + fmt(invest1) + '/yr ÷ 12)', investMonthly1, haircut, assessed1Invest]);
     if (isJoint) {
         incomeRows.push(['Borrower 2 — Fixed (monthly)', fixed2, 0, assessed2Fixed]);
         incomeRows.push(['Borrower 2 — Variable (' + fmt(variable2) + '/yr ÷ 12)', varMonthly2, haircut, assessed2Var]);
+        if (invest2 > 0) incomeRows.push(['Borrower 2 — Investment (' + fmt(invest2) + '/yr ÷ 12)', investMonthly2, haircut, assessed2Invest]);
     }
 
     let incomeHTML = '';
@@ -845,7 +861,7 @@ function calculate() {
 }
 
 /* ── Baseline save / restore / reset ── */
-const BASELINE_FIELDS = ['bank','age1','fixedIncome1','variableIncome1','debt1','cpfOA1','cash1','jointToggle','age2','fixedIncome2','variableIncome2','debt2','cpfOA2','cash2','propertyType','propertyPrice','tenure','interestRate','outstandingLoans','loanType','ageTenureMode'];
+const BASELINE_FIELDS = ['bank','age1','fixedIncome1','variableIncome1','investIncome1','debt1','cpfOA1','cash1','jointToggle','age2','fixedIncome2','variableIncome2','investIncome2','debt2','cpfOA2','cash2','propertyType','propertyPrice','tenure','interestRate','outstandingLoans','loanType','ageTenureMode'];
 
 function saveBaseline() {
     const data = {};
@@ -879,7 +895,7 @@ function restoreBaseline() {
 function resetDefaults() {
     localStorage.removeItem('mortgageBaseline');
     // Reset to HTML default values
-    const defaults = {bank:'dbs',age1:'35',fixedIncome1:'6000',variableIncome1:'24000',debt1:'0',cpfOA1:'50000',cash1:'50000',jointToggle:false,age2:'33',fixedIncome2:'4000',variableIncome2:'12000',debt2:'0',cpfOA2:'30000',cash2:'30000',propertyType:'private',propertyPrice:'0',tenure:'25',interestRate:'3.5',outstandingLoans:'0',loanType:'bank',ageTenureMode:'reduceTenure'};
+    const defaults = {bank:'dbs',age1:'35',fixedIncome1:'6000',variableIncome1:'24000',investIncome1:'0',debt1:'0',cpfOA1:'50000',cash1:'50000',jointToggle:false,age2:'33',fixedIncome2:'4000',variableIncome2:'12000',investIncome2:'0',debt2:'0',cpfOA2:'30000',cash2:'30000',propertyType:'private',propertyPrice:'0',tenure:'25',interestRate:'3.5',outstandingLoans:'0',loanType:'bank',ageTenureMode:'reduceTenure'};
     BASELINE_FIELDS.forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -925,19 +941,23 @@ function getBaselineValues() {
     const age1 = parseInt(document.getElementById('age1').value) || 35;
     const fixed1 = parseFloat(document.getElementById('fixedIncome1').value) || 0;
     const variable1 = parseFloat(document.getElementById('variableIncome1').value) || 0;
+    const invest1 = parseFloat(document.getElementById('investIncome1').value) || 0;
     const debt1 = parseFloat(document.getElementById('debt1').value) || 0;
     const cpfOA1 = parseFloat(document.getElementById('cpfOA1').value) || 0;
     const cash1 = parseFloat(document.getElementById('cash1').value) || 0;
     const age2 = isJoint ? (parseInt(document.getElementById('age2').value) || 33) : null;
     const fixed2 = isJoint ? (parseFloat(document.getElementById('fixedIncome2').value) || 0) : 0;
     const variable2 = isJoint ? (parseFloat(document.getElementById('variableIncome2').value) || 0) : 0;
+    const invest2 = isJoint ? (parseFloat(document.getElementById('investIncome2').value) || 0) : 0;
     const debt2 = isJoint ? (parseFloat(document.getElementById('debt2').value) || 0) : 0;
     const cpfOA2 = isJoint ? (parseFloat(document.getElementById('cpfOA2').value) || 0) : 0;
     const cash2 = isJoint ? (parseFloat(document.getElementById('cash2').value) || 0) : 0;
     const haircut = bankRule.haircut;
     const varMonthly1 = variable1 / 12;
     const varMonthly2 = variable2 / 12;
-    const totalAssessedIncome = fixed1 + varMonthly1*(1-haircut) + fixed2 + varMonthly2*(1-haircut);
+    const investMonthly1 = invest1 / 12;
+    const investMonthly2 = invest2 / 12;
+    const totalAssessedIncome = fixed1 + varMonthly1*(1-haircut) + investMonthly1*(1-haircut) + fixed2 + varMonthly2*(1-haircut) + investMonthly2*(1-haircut);
     const totalDebt = debt1 + debt2;
     const totalCPF = cpfOA1 + (isJoint ? cpfOA2 : 0);
     const totalCash = cash1 + (isJoint ? cash2 : 0);
