@@ -1052,7 +1052,7 @@ function calcScenarioData(s, base) {
     else if (tdsrPct <= 50) barColor = 'var(--warning)';
     else barColor = 'var(--danger)';
 
-    return { propertyPrice, tenure, interestRate, outstandingLoans, propertyType, loanType, maxLoanAfford, ltvApplied, downPayment, bsd, actualMonthly, maxLoan, tdsrPct, barColor, cashPosition, verdict, verdictClass, msrApplies };
+    return { propertyPrice, tenure, interestRate, outstandingLoans, propertyType, loanType, maxLoanAfford, ltvApplied, downPayment, bsd, totalCashNeeded, actualMonthly, maxLoan, tdsrPct, barColor, cashPosition, verdict, verdictClass, msrApplies };
 }
 
 const RESULT_ROW_DEFS = [
@@ -1060,6 +1060,7 @@ const RESULT_ROW_DEFS = [
     { label: 'LTV Applied', fn: r => pct(r.ltvApplied) },
     { label: 'Down Payment', fn: r => r.propertyPrice > 0 ? fmt(r.downPayment) : '-' },
     { label: 'BSD', fn: r => r.propertyPrice > 0 ? fmt(r.bsd) : '-' },
+    { label: 'Total Cash Needed', fn: r => r.propertyPrice > 0 ? fmt(r.totalCashNeeded) : '-' },
     { label: 'Monthly Repayment', fn: r => r.maxLoan > 0 ? fmt(r.actualMonthly)+'/mo' : '-' },
     { label: 'TDSR Utilization', fn: r => r.tdsrPct.toFixed(1)+'%', extra: r => `<div class="tdsr-bar"><div class="tdsr-bar-fill" style="width:${r.tdsrPct}%;background:${r.barColor}"></div></div>` },
     { label: 'Cash Position', fn: r => r.propertyPrice > 0 ? (r.cashPosition >= 0 ? 'Surplus '+fmt(r.cashPosition) : 'Shortfall '+fmt(Math.abs(r.cashPosition))) : '-', style: r => `color:${r.cashPosition >= 0 ? 'var(--success)' : 'var(--danger)'}` },
