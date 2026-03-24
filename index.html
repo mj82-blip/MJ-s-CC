@@ -1115,7 +1115,7 @@ function calcScenarioData(s, base) {
 
 const RESULT_ROW_DEFS = [
     { section: 'Loan & LTV' },
-    { label: 'Loan Quantum Range', fn: r => r.propertyPrice > 0 ? fmt(r.minLoanQuantum) + ' — ' + fmt(Math.min(r.maxLoanQuantum, r.propertyPrice * r.ltvApplied)) : fmt(0) + ' — ' + fmt(r.maxLoanQuantum) },
+    { label: 'Loan Quantum Range', fn: r => { if (r.propertyPrice <= 0) return fmt(0) + ' — ' + fmt(r.maxLoanQuantum); const ltvCap = r.propertyPrice * r.ltvApplied; const lo = Math.min(r.minLoanQuantum, ltvCap); const hi = Math.min(r.maxLoanQuantum, ltvCap); return fmt(Math.min(lo,hi)) + ' — ' + fmt(Math.max(lo,hi)); } },
     { label: 'Actual Loan', fn: r => r.propertyPrice > 0 ? fmt(r.loanForCalc) : '-' },
     { label: 'LTV Applied', fn: r => pct(r.ltvApplied) },
     { section: 'Upfront Costs' },
