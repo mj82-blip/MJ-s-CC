@@ -16,6 +16,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Mortgage">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
+    <link rel="apple-touch-startup-image" href="icon-512.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -171,14 +173,18 @@
             .scenario-table .col-scenario{min-width:150px}
             .header-buttons{flex-direction:column;align-items:center}
         }
+        .update-banner{position:fixed;bottom:0;left:0;right:0;background:var(--primary);color:#fff;padding:.75rem 1rem;text-align:center;font-size:.85rem;font-weight:600;z-index:200;display:none;cursor:pointer;padding-bottom:calc(.75rem + env(safe-area-inset-bottom))}
+        .update-banner:hover{background:var(--primary-dark)}
     </style>
 </head>
 <body>
+<div class="update-banner" id="updateBanner" onclick="location.reload()">A new version is available. Tap to update.</div>
 <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode"></button>
 <div class="container">
     <div class="header">
         <h1>Singapore Mortgage Calculator</h1>
         <p>Bank-specific rules, joint applications, age-tenure LTV &amp; CPF</p>
+        <p style="font-size:.72rem;color:var(--text-muted);margin-top:.2rem">v0.9.0</p>
         <div class="header-buttons">
             <button class="btn btn-primary" onclick="saveBaseline()">Save Baseline</button>
             <button class="btn btn-muted" onclick="resetDefaults()">Reset to Defaults</button>
@@ -1256,9 +1262,24 @@ function toggleTheme() {
 }
 applyTheme(getThemePref());
 
-// Register service worker
+// Register service worker with update detection
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
+    navigator.serviceWorker.register('sw.js').then(reg => {
+        reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    document.getElementById('updateBanner').style.display = 'block';
+                    newWorker.postMessage('skipWaiting');
+                }
+            });
+        });
+    });
+    // Reload when new SW takes over
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) { refreshing = true; location.reload(); }
+    });
 }
 </script>
 </body>
