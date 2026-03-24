@@ -450,6 +450,7 @@
             <table class="scenario-table" id="scenarioTable" style="display:none">
                 <thead id="scenarioTHead"></thead>
                 <tbody id="scenarioTBody"></tbody>
+                <tbody id="scenarioResultsBody"></tbody>
             </table>
         </div>
     </div>
@@ -999,7 +1000,7 @@ function scenarioFieldChanged(idx) {
     scenarios[idx].outstandingLoans = document.getElementById('sc_loans_'+idx).value;
     scenarios[idx].propertyType = document.getElementById('sc_proptype_'+idx).value;
     scenarios[idx].loanType = document.getElementById('sc_loantype_'+idx).value;
-    renderAndCalcAll();
+    updateResults();
 }
 
 function calcScenarioData(s, base) {
@@ -1054,6 +1055,44 @@ function calcScenarioData(s, base) {
     return { propertyPrice, tenure, interestRate, outstandingLoans, propertyType, loanType, maxLoanAfford, ltvApplied, downPayment, bsd, actualMonthly, maxLoan, tdsrPct, barColor, cashPosition, verdict, verdictClass, msrApplies };
 }
 
+const RESULT_ROW_DEFS = [
+    { label: 'Max Loan', fn: r => fmt(r.maxLoanAfford) },
+    { label: 'LTV Applied', fn: r => pct(r.ltvApplied) },
+    { label: 'Down Payment', fn: r => r.propertyPrice > 0 ? fmt(r.downPayment) : '-' },
+    { label: 'BSD', fn: r => r.propertyPrice > 0 ? fmt(r.bsd) : '-' },
+    { label: 'Monthly Repayment', fn: r => r.maxLoan > 0 ? fmt(r.actualMonthly)+'/mo' : '-' },
+    { label: 'TDSR Utilization', fn: r => r.tdsrPct.toFixed(1)+'%', extra: r => `<div class="tdsr-bar"><div class="tdsr-bar-fill" style="width:${r.tdsrPct}%;background:${r.barColor}"></div></div>` },
+    { label: 'Cash Position', fn: r => r.propertyPrice > 0 ? (r.cashPosition >= 0 ? 'Surplus '+fmt(r.cashPosition) : 'Shortfall '+fmt(Math.abs(r.cashPosition))) : '-', style: r => `color:${r.cashPosition >= 0 ? 'var(--success)' : 'var(--danger)'}` },
+    { label: 'Verdict', fn: r => `<span class="verdict-badge ${r.verdictClass}">${r.verdict}</span>` },
+];
+
+function buildResultsHTML(results) {
+    const n = results.length;
+    let html = `<tr class="section-row"><td class="section-label" colspan="${n+1}">Results</td></tr>`;
+    RESULT_ROW_DEFS.forEach(row => {
+        html += '<tr><td class="col-label">' + row.label + '</td>';
+        for (let i = 0; i < n; i++) {
+            const r = results[i];
+            const st = row.style ? ` style="${row.style(r)}"` : '';
+            const val = row.fn(r);
+            const extra = row.extra ? row.extra(r) : '';
+            html += `<td class="result-val"${st}>${val}${extra}</td>`;
+        }
+        html += '</tr>';
+    });
+    return html;
+}
+
+/* Update only the results rows without touching inputs (preserves focus/keyboard) */
+function updateResults() {
+    const resultsBody = document.getElementById('scenarioResultsBody');
+    if (!resultsBody || scenarios.length === 0) return;
+    const base = getBaselineValues();
+    const results = scenarios.map(s => calcScenarioData(s, base));
+    resultsBody.innerHTML = buildResultsHTML(results);
+}
+
+/* Full render — rebuilds inputs + results (used when adding/removing scenarios) */
 function renderAndCalcAll() {
     const table = document.getElementById('scenarioTable');
     if (scenarios.length === 0) { table.style.display = 'none'; return; }
@@ -1076,7 +1115,6 @@ function renderAndCalcAll() {
     const propOpts = (sel) => `<option value="hdb"${sel==='hdb'?' selected':''}>HDB</option><option value="ec"${sel==='ec'?' selected':''}>EC</option><option value="private"${sel==='private'?' selected':''}>Private</option>`;
     const ltOpts = (sel) => `<option value="bank"${sel==='bank'?' selected':''}>Bank</option><option value="hdb"${sel==='hdb'?' selected':''}>HDB</option>`;
 
-    // Input rows
     const inputRows = [
         { label: 'Property Price', field: 'propertyPrice', type: 'number', id: 'price', attrs: 'min="0" step="10000"' },
         { label: 'Tenure (yrs)', field: 'tenure', type: 'number', id: 'tenure', attrs: 'min="1" max="30"' },
@@ -1086,51 +1124,26 @@ function renderAndCalcAll() {
         { label: 'Loan Type', field: 'loanType', type: 'select', id: 'loantype', optsFn: ltOpts },
     ];
 
-    // Result rows
-    const resultRows = [
-        { label: 'Max Loan', fn: r => fmt(r.maxLoanAfford) },
-        { label: 'LTV Applied', fn: r => pct(r.ltvApplied) },
-        { label: 'Down Payment', fn: r => r.propertyPrice > 0 ? fmt(r.downPayment) : '-' },
-        { label: 'BSD', fn: r => r.propertyPrice > 0 ? fmt(r.bsd) : '-' },
-        { label: 'Monthly Repayment', fn: r => r.maxLoan > 0 ? fmt(r.actualMonthly)+'/mo' : '-' },
-        { label: 'TDSR Utilization', fn: r => r.tdsrPct.toFixed(1)+'%', extra: r => `<div class="tdsr-bar"><div class="tdsr-bar-fill" style="width:${r.tdsrPct}%;background:${r.barColor}"></div></div>` },
-        { label: 'Cash Position', fn: r => r.propertyPrice > 0 ? (r.cashPosition >= 0 ? 'Surplus '+fmt(r.cashPosition) : 'Shortfall '+fmt(Math.abs(r.cashPosition))) : '-', style: r => `color:${r.cashPosition >= 0 ? 'var(--success)' : 'var(--danger)'}` },
-        { label: 'Verdict', fn: r => `<span class="verdict-badge ${r.verdictClass}">${r.verdict}</span>`, isHTML: true },
-    ];
-
-    let tbody = '';
-
-    // Section: Inputs
-    tbody += `<tr class="section-row"><td class="section-label" colspan="${n+1}">Property Inputs</td></tr>`;
+    // Input rows go in main tbody
+    let inputHTML = `<tr class="section-row"><td class="section-label" colspan="${n+1}">Property Inputs</td></tr>`;
     inputRows.forEach(row => {
-        tbody += '<tr><td class="col-label">' + row.label + '</td>';
+        inputHTML += '<tr><td class="col-label">' + row.label + '</td>';
         for (let i = 0; i < n; i++) {
             const s = scenarios[i];
             const ev = row.type === 'select' ? 'onchange' : 'oninput';
             if (row.type === 'number') {
-                tbody += `<td><input type="number" id="sc_${row.id}_${i}" value="${s[row.field]}" ${row.attrs} ${ev}="scenarioFieldChanged(${i})"></td>`;
+                inputHTML += `<td><input type="number" id="sc_${row.id}_${i}" value="${s[row.field]}" ${row.attrs} ${ev}="scenarioFieldChanged(${i})"></td>`;
             } else {
-                tbody += `<td><select id="sc_${row.id}_${i}" ${ev}="scenarioFieldChanged(${i})">${row.optsFn(s[row.field])}</select></td>`;
+                inputHTML += `<td><select id="sc_${row.id}_${i}" ${ev}="scenarioFieldChanged(${i})">${row.optsFn(s[row.field])}</select></td>`;
             }
         }
-        tbody += '</tr>';
+        inputHTML += '</tr>';
     });
 
-    // Section: Results
-    tbody += `<tr class="section-row"><td class="section-label" colspan="${n+1}">Results</td></tr>`;
-    resultRows.forEach(row => {
-        tbody += '<tr><td class="col-label">' + row.label + '</td>';
-        for (let i = 0; i < n; i++) {
-            const r = results[i];
-            const st = row.style ? ` style="${row.style(r)}"` : '';
-            const val = row.fn(r);
-            const extra = row.extra ? row.extra(r) : '';
-            tbody += `<td class="result-val"${st}>${val}${extra}</td>`;
-        }
-        tbody += '</tr>';
-    });
+    document.getElementById('scenarioTBody').innerHTML = inputHTML;
 
-    document.getElementById('scenarioTBody').innerHTML = tbody;
+    // Results in separate tbody so we can update independently
+    document.getElementById('scenarioResultsBody').innerHTML = buildResultsHTML(results);
 }
 
 /* ── Live calculation on any input change ── */
