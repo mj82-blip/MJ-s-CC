@@ -1060,9 +1060,44 @@ function calcScenarioData(s, base) {
     const tdsrPct = Math.min(tdsrUsed, 100);
 
     const totalCashNeeded = downPayment + bsd;
-    const cpfUsable = propertyPrice > 0 ? Math.min(base.totalCPF, Math.max(0, downPayment - (outstandingLoans === 0 && loanType === 'bank' ? propertyPrice * 0.05 : (outstandingLoans > 0 ? propertyPrice * 0.25 : 0)))) : 0;
+    // Mandatory cash portion: 5% for 1st bank loan, 10% for 2nd, 25% for 3rd+; HDB loans = 10%
+    const mandatoryCashPct = loanType === 'hdb' ? 0.10 : (outstandingLoans === 0 ? 0.05 : (outstandingLoans === 1 ? 0.25 : 0.25));
+    const mandatoryCash = propertyPrice > 0 ? propertyPrice * mandatoryCashPct : 0;
+    const cpfUsable = propertyPrice > 0 ? Math.min(base.totalCPF, Math.max(0, downPayment - mandatoryCash)) : 0;
     const cashNeeded = Math.max(0, totalCashNeeded - cpfUsable);
     const cashPosition = base.totalCash - cashNeeded;
+
+    // Loan quantum range: min (user pays max cash+CPF) to max (TDSR-limited)
+    const maxDPFromFunds = base.totalCash + base.totalCPF - bsd; // max DP they could put
+    const minLoanQuantum = propertyPrice > 0 ? Math.max(0, propertyPrice - Math.min(maxDPFromFunds, propertyPrice)) : 0;
+    const maxLoanQuantum = maxLoanAfford;
+
+    // Interest & principal split (month 1)
+    const monthlyRate = interestRate / 100 / 12;
+    const loanForCalc = propertyPrice > 0 ? Math.min(maxLoan, propertyPrice * ltvApplied) : maxLoanAfford;
+    const month1Interest = loanForCalc * monthlyRate;
+    const month1Principal = actualMonthly - month1Interest;
+
+    // Total interest over loan life
+    const totalRepayment = actualMonthly * tenure * 12;
+    const totalInterest = totalRepayment - loanForCalc;
+
+    // Year 5 equity position (principal paid off after 5 years)
+    let principalPaidY5 = 0;
+    let balanceY5 = loanForCalc;
+    for (let m = 0; m < Math.min(60, tenure * 12); m++) {
+        const intPart = balanceY5 * monthlyRate;
+        const prinPart = actualMonthly - intPart;
+        principalPaidY5 += prinPart;
+        balanceY5 -= prinPart;
+    }
+    const equityY5 = propertyPrice > 0 ? downPayment + principalPaidY5 : 0;
+    const equityPctY5 = propertyPrice > 0 ? (equityY5 / propertyPrice) * 100 : 0;
+
+    // Break-even monthly rent (what rent justifies buying based on total cost of ownership)
+    // Simplified: (monthly repayment + opportunity cost on DP at 2.5% - principal portion) ~ net monthly cost
+    const oppCostMonthly = downPayment * 0.025 / 12; // 2.5% p.a. opportunity cost on locked-up capital
+    const breakEvenRent = month1Interest + oppCostMonthly + (propertyPrice * 0.005 / 12); // interest + opp cost + maintenance ~0.5%
 
     let verdict, verdictClass;
     if (propertyPrice <= 0) { verdict = 'Enter a price'; verdictClass = 'verdict-yellow'; }
@@ -1075,25 +1110,44 @@ function calcScenarioData(s, base) {
     else if (tdsrPct <= 50) barColor = 'var(--warning)';
     else barColor = 'var(--danger)';
 
-    return { propertyPrice, tenure, interestRate, outstandingLoans, propertyType, loanType, maxLoanAfford, ltvApplied, downPayment, bsd, totalCashNeeded, actualMonthly, maxLoan, tdsrPct, barColor, cashPosition, verdict, verdictClass, msrApplies };
+    return { propertyPrice, tenure, interestRate, outstandingLoans, propertyType, loanType, maxLoanAfford, ltvApplied, downPayment, bsd, totalCashNeeded, actualMonthly, maxLoan, tdsrPct, barColor, cashPosition, verdict, verdictClass, msrApplies, mandatoryCash, cpfUsable, minLoanQuantum, maxLoanQuantum, month1Interest, month1Principal, totalInterest, totalRepayment, equityPctY5, equityY5, breakEvenRent, loanForCalc };
 }
 
 const RESULT_ROW_DEFS = [
-    { label: 'Max Loan', fn: r => fmt(r.maxLoanAfford) },
+    { section: 'Loan & LTV' },
+    { label: 'Loan Quantum Range', fn: r => r.propertyPrice > 0 ? fmt(r.minLoanQuantum) + ' — ' + fmt(Math.min(r.maxLoanQuantum, r.propertyPrice * r.ltvApplied)) : fmt(0) + ' — ' + fmt(r.maxLoanQuantum) },
+    { label: 'Actual Loan', fn: r => r.propertyPrice > 0 ? fmt(r.loanForCalc) : '-' },
     { label: 'LTV Applied', fn: r => pct(r.ltvApplied) },
+    { section: 'Upfront Costs' },
     { label: 'Down Payment', fn: r => r.propertyPrice > 0 ? fmt(r.downPayment) : '-' },
-    { label: 'BSD', fn: r => r.propertyPrice > 0 ? fmt(r.bsd) : '-' },
+    { label: 'Min Cash (mandatory)', fn: r => r.propertyPrice > 0 ? fmt(r.mandatoryCash) : '-' },
+    { label: 'CPF Usable', fn: r => r.propertyPrice > 0 ? fmt(r.cpfUsable) : '-' },
+    { label: "Buyer's Stamp Duty", fn: r => r.propertyPrice > 0 ? fmt(r.bsd) : '-' },
     { label: 'Total Cash Needed', fn: r => r.propertyPrice > 0 ? fmt(r.totalCashNeeded) : '-' },
+    { section: 'Monthly Breakdown' },
     { label: 'Monthly Repayment', fn: r => r.maxLoan > 0 ? fmt(r.actualMonthly)+'/mo' : '-' },
+    { label: 'Interest (month 1)', fn: r => r.maxLoan > 0 ? fmt(r.month1Interest)+'/mo' : '-' },
+    { label: 'Principal (month 1)', fn: r => r.maxLoan > 0 ? fmt(r.month1Principal)+'/mo' : '-' },
+    { section: 'Total Cost of Loan' },
+    { label: 'Total Repayment', fn: r => r.maxLoan > 0 ? fmt(r.totalRepayment) : '-' },
+    { label: 'Total Interest Paid', fn: r => r.maxLoan > 0 ? fmt(r.totalInterest) : '-' },
+    { label: 'Interest-to-Loan %', fn: r => r.loanForCalc > 0 ? (r.totalInterest / r.loanForCalc * 100).toFixed(1) + '%' : '-' },
+    { section: 'Affordability' },
     { label: 'TDSR Utilization', fn: r => r.tdsrPct.toFixed(1)+'%', extra: r => `<div class="tdsr-bar"><div class="tdsr-bar-fill" style="width:${r.tdsrPct}%;background:${r.barColor}"></div></div>` },
     { label: 'Cash Position', fn: r => r.propertyPrice > 0 ? (r.cashPosition >= 0 ? 'Surplus '+fmt(r.cashPosition) : 'Shortfall '+fmt(Math.abs(r.cashPosition))) : '-', style: r => `color:${r.cashPosition >= 0 ? 'var(--success)' : 'var(--danger)'}` },
+    { label: 'Equity @ Year 5', fn: r => r.propertyPrice > 0 ? fmt(r.equityY5) + ' (' + r.equityPctY5.toFixed(1) + '%)' : '-' },
+    { label: 'Break-even Rent', fn: r => r.propertyPrice > 0 && r.maxLoan > 0 ? fmt(r.breakEvenRent)+'/mo' : '-' },
     { label: 'Verdict', fn: r => `<span class="verdict-badge ${r.verdictClass}">${r.verdict}</span>` },
 ];
 
 function buildResultsHTML(results) {
     const n = results.length;
-    let html = `<tr class="section-row"><td class="section-label" colspan="${n+1}">Results</td></tr>`;
+    let html = '';
     RESULT_ROW_DEFS.forEach(row => {
+        if (row.section) {
+            html += `<tr class="section-row"><td class="section-label" colspan="${n+1}">${row.section}</td></tr>`;
+            return;
+        }
         html += '<tr><td class="col-label">' + row.label + '</td>';
         for (let i = 0; i < n; i++) {
             const r = results[i];
