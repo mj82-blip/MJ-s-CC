@@ -617,8 +617,9 @@ function calculate() {
         const canAfford = (p) => {
             const dp = p * dpPct;
             const cpfUsable = Math.min(totalCPF, Math.max(0, p * (dpPct - mppMinCashPct)));
-            const cashForDP = Math.max(0, dp - cpfUsable);
-            return cashForDP + calcBSD(p) <= totalCash;
+            const cashDemand = dp + calcBSD(p) + p * 0.01; // DP + BSD + 1% misc
+            const cashSupply = totalCash + cpfUsable;
+            return cashDemand <= cashSupply;
         };
         if (!canAfford(maxPropertyFromLoan)) {
             // Binary search for the max price user can actually afford
@@ -717,25 +718,35 @@ function calculate() {
     }
     if (ltvApplied > 0) {
         const mpp = maxPropertyFromLoan;
-        const mppDownPayment = mpp * (1 - ltvApplied);
+        const mppDP = mpp * (1 - ltvApplied);
         const mppBSD = calcBSD(mpp);
-        const mppCpfUsable = Math.min(totalCPF, Math.max(0, mppDownPayment - mpp * (outstandingLoans === 0 && loanType === 'bank' ? 0.05 : (outstandingLoans > 0 ? 0.25 : 0))));
-        const mppTotalCash = Math.max(0, mppDownPayment - mppCpfUsable) + mppBSD;
-        const mppCashRemaining = Math.max(0, totalCash - mppTotalCash);
+        const mppMisc = mpp * 0.01; // 1% miscellaneous expenses
+        const mppMinCashPct = outstandingLoans === 0 && loanType === 'bank' ? 0.05 : (outstandingLoans > 0 ? 0.25 : 0);
+        const mppCpfUsable = Math.min(totalCPF, Math.max(0, mppDP - mpp * mppMinCashPct));
+
+        // Cash supply vs demand
+        const cashSupply = totalCash + mppCpfUsable;
+        const cashDemand = mppDP + mppBSD + mppMisc;
+        const cashNet = cashSupply - cashDemand;
 
         let mpHTML = '';
         mpHTML += `<tr class="total-row"><td>Max Property Price</td><td class="right">${fmt(mpp)}${isCashConstrained ? ' <span class="tag tag-msr">Cash-limited</span>' : ''}</td></tr>`;
         mpHTML += `<tr><td>Loan (${pct(ltvApplied)} LTV)</td><td class="right">${fmt(mpp * ltvApplied)}</td></tr>`;
-        mpHTML += `<tr><td>Down Payment</td><td class="right">${fmt(mppDownPayment)}</td></tr>`;
+        mpHTML += `<tr><td colspan="2" style="padding-top:.6rem;font-weight:600;color:var(--primary)">Cash Supply</td></tr>`;
+        mpHTML += `<tr><td>Available Cash</td><td class="right">${fmt(totalCash)}</td></tr>`;
         mpHTML += `<tr><td>CPF Usable</td><td class="right">${fmt(mppCpfUsable)}</td></tr>`;
-        mpHTML += `<tr><td>BSD</td><td class="right">${fmt(mppBSD)}</td></tr>`;
-        mpHTML += `<tr class="total-row"><td>Total Cash Needed</td><td class="right">${fmt(mppTotalCash)}</td></tr>`;
-        mpHTML += `<tr class="total-row"><td>Cash Remaining</td><td class="right" style="color:${mppCashRemaining > 0 ? '#276749' : '#c53030'}">${fmt(mppCashRemaining)}</td></tr>`;
+        mpHTML += `<tr class="total-row"><td>Total Cash Supply</td><td class="right">${fmt(cashSupply)}</td></tr>`;
+        mpHTML += `<tr><td colspan="2" style="padding-top:.6rem;font-weight:600;color:var(--primary)">Cash Demand</td></tr>`;
+        mpHTML += `<tr><td>Down Payment (${pct(1 - ltvApplied)})</td><td class="right">${fmt(mppDP)}</td></tr>`;
+        mpHTML += `<tr><td>Buyer's Stamp Duty</td><td class="right">${fmt(mppBSD)}</td></tr>`;
+        mpHTML += `<tr><td>Misc. Expenses (~1%)</td><td class="right">${fmt(mppMisc)}</td></tr>`;
+        mpHTML += `<tr class="total-row"><td>Total Cash Demand</td><td class="right">${fmt(cashDemand)}</td></tr>`;
+        mpHTML += `<tr class="total-row"><td>${cashNet >= 0 ? 'Surplus' : 'Shortfall'}</td><td class="right" style="color:${cashNet >= 0 ? '#276749' : '#c53030'}">${fmt(Math.abs(cashNet))}</td></tr>`;
         document.getElementById('maxPropBody').innerHTML = mpHTML;
 
         document.getElementById('maxPropNote').innerHTML = isCashConstrained
-            ? 'Limited by cash — income alone supports up to ' + fmt(incomeOnlyMax) + '. Increase savings or CPF to unlock full capacity.'
-            : 'ABSD not included — check if applicable based on residency and number of properties.';
+            ? 'Limited by cash — income supports up to ' + fmt(incomeOnlyMax) + '.'
+            : 'ABSD not included — check based on residency and number of properties.';
     } else {
         document.getElementById('maxPropBody').innerHTML = '<tr><td colspan="2">LTV is 0%</td></tr>';
         document.getElementById('maxPropNote').innerHTML = '';
