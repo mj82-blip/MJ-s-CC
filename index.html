@@ -78,7 +78,7 @@
         <div class="form-group">
             <label>Lender
                 <span class="tooltip-wrap"><span class="info-icon">?</span>
-                    <span class="tip">Each bank applies different haircuts to variable income (commission, bonuses, overtime). MAS mandates a minimum 30% haircut but banks may be stricter.</span>
+                    <span class="tip">Each bank applies different haircuts to variable income (commission, bonuses, overtime). Variable income is entered as annual and converted to monthly. MAS mandates a minimum 30% haircut but banks may be stricter.</span>
                 </span>
             </label>
             <select id="bank">
@@ -105,8 +105,8 @@
                 <input type="number" id="fixedIncome1" value="6000" min="0" step="100">
             </div>
             <div class="form-group">
-                <label>Variable Monthly Income (SGD) <small>avg commission/bonus/OT</small></label>
-                <input type="number" id="variableIncome1" value="2000" min="0" step="100">
+                <label>Variable Annual Income (SGD) <small>commission/bonus/OT per year</small></label>
+                <input type="number" id="variableIncome1" value="24000" min="0" step="1000">
             </div>
         </div>
         <div class="row">
@@ -142,8 +142,8 @@
                     <input type="number" id="fixedIncome2" value="4000" min="0" step="100">
                 </div>
                 <div class="form-group">
-                    <label>Variable Monthly Income (SGD)</label>
-                    <input type="number" id="variableIncome2" value="1000" min="0" step="100">
+                    <label>Variable Annual Income (SGD)</label>
+                    <input type="number" id="variableIncome2" value="12000" min="0" step="1000">
                 </div>
             </div>
             <div class="row">
@@ -194,12 +194,25 @@
                 </select>
             </div>
         </div>
-        <div class="form-group">
-            <label>Loan Type</label>
-            <select id="loanType">
-                <option value="bank" selected>Bank Loan</option>
-                <option value="hdb">HDB Loan</option>
-            </select>
+        <div class="row">
+            <div class="form-group">
+                <label>Loan Type</label>
+                <select id="loanType">
+                    <option value="bank" selected>Bank Loan</option>
+                    <option value="hdb">HDB Loan</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>If Age + Tenure > 65
+                    <span class="tooltip-wrap"><span class="info-icon">?</span>
+                        <span class="tip">When the oldest borrower's age + tenure exceeds 65, you can either reduce the tenure to fit within 65 (keeping the higher LTV) or keep the original tenure and accept a lower LTV.</span>
+                    </span>
+                </label>
+                <select id="ageTenureMode">
+                    <option value="reduceTenure" selected>Reduce tenure (keep higher LTV)</option>
+                    <option value="reduceLTV">Keep tenure (accept lower LTV)</option>
+                </select>
+            </div>
         </div>
     </div>
 
@@ -280,7 +293,7 @@
         <div class="card">
             <h2>Age + Tenure LTV Interaction
                 <span class="tooltip-wrap"><span class="info-icon">?</span>
-                    <span class="tip">If the oldest borrower's age + loan tenure exceeds 65, the LTV limit is reduced. For borrowers aged 65+, tenure is capped at the remaining working years up to 75.</span>
+                    <span class="tip">If the oldest borrower's age + loan tenure exceeds 65, you can either reduce tenure to stay within 65 (keeping the higher LTV) or accept a lower LTV to keep your preferred tenure.</span>
                 </span>
             </h2>
             <table class="breakdown-table">
@@ -385,31 +398,33 @@ function calculate() {
     const outstandingLoans = parseInt(document.getElementById('outstandingLoans').value);
     const loanType = document.getElementById('loanType').value;
 
-    // ── Income assessment ──
+    // ── Income assessment (variable income is annual → convert to monthly) ──
     const haircut = bankRule.haircut;
+    const varMonthly1 = variable1 / 12;
+    const varMonthly2 = variable2 / 12;
     const assessed1Fixed = fixed1;
-    const assessed1Var = variable1 * (1 - haircut);
+    const assessed1Var = varMonthly1 * (1 - haircut);
     const assessed2Fixed = fixed2;
-    const assessed2Var = variable2 * (1 - haircut);
+    const assessed2Var = varMonthly2 * (1 - haircut);
 
     const totalAssessedIncome = assessed1Fixed + assessed1Var + assessed2Fixed + assessed2Var;
-    const totalGross = fixed1 + variable1 + fixed2 + variable2;
+    const totalGrossMonthly = fixed1 + varMonthly1 + fixed2 + varMonthly2;
     const totalDebt = debt1 + debt2;
 
     // ── Income table ──
     const incomeRows = [];
-    incomeRows.push(['Borrower 1 — Fixed', fixed1, 0, assessed1Fixed]);
-    incomeRows.push(['Borrower 1 — Variable', variable1, haircut, assessed1Var]);
+    incomeRows.push(['Borrower 1 — Fixed (monthly)', fixed1, 0, assessed1Fixed]);
+    incomeRows.push(['Borrower 1 — Variable (' + fmt(variable1) + '/yr ÷ 12)', varMonthly1, haircut, assessed1Var]);
     if (isJoint) {
-        incomeRows.push(['Borrower 2 — Fixed', fixed2, 0, assessed2Fixed]);
-        incomeRows.push(['Borrower 2 — Variable', variable2, haircut, assessed2Var]);
+        incomeRows.push(['Borrower 2 — Fixed (monthly)', fixed2, 0, assessed2Fixed]);
+        incomeRows.push(['Borrower 2 — Variable (' + fmt(variable2) + '/yr ÷ 12)', varMonthly2, haircut, assessed2Var]);
     }
 
     let incomeHTML = '';
     incomeRows.forEach(r => {
         incomeHTML += `<tr><td>${r[0]}</td><td class="right">${fmt(r[1])}</td><td class="right">${r[2] > 0 ? pct(r[2]) : '—'}</td><td class="right">${fmt(r[3])}</td></tr>`;
     });
-    incomeHTML += `<tr class="total-row"><td>Total Assessed Income</td><td class="right">${fmt(totalGross)}</td><td class="right"></td><td class="right">${fmt(totalAssessedIncome)}</td></tr>`;
+    incomeHTML += `<tr class="total-row"><td>Total Assessed Income (monthly)</td><td class="right">${fmt(totalGrossMonthly)}</td><td class="right"></td><td class="right">${fmt(totalAssessedIncome)}</td></tr>`;
     document.getElementById('incomeBody').innerHTML = incomeHTML;
     document.getElementById('bankLabel').textContent = bankRule.name;
 
@@ -457,27 +472,53 @@ function calculate() {
         constraint = 'TDSR (55%)';
     }
 
-    // ── Age + Tenure LTV interaction (65-year rule) ──
+    // ── Age + Tenure: 65-year rule ──
+    // Default behaviour: reduce tenure to fit within 65 (preserving higher LTV).
+    // User can choose to keep original tenure and accept reduced LTV instead.
     const oldestAge = isJoint ? Math.max(age1, age2) : age1;
     const agePlusTenure = oldestAge + tenure;
     const exceeds65 = agePlusTenure > 65;
 
+    const keepTenure = document.getElementById('ageTenureMode').value === 'reduceLTV';
+    const maxTenureFor65 = Math.max(1, 65 - oldestAge);
+    let effectiveTenure = tenure;
+    let ltvApplied;
+
     const ltvNormal = getLTV(outstandingLoans, loanType, false);
     const ltvReduced = getLTV(outstandingLoans, loanType, true);
-    const ltvApplied = exceeds65 ? ltvReduced : ltvNormal;
+
+    if (exceeds65) {
+        if (keepTenure) {
+            // User chose to keep their tenure → accept reduced LTV
+            effectiveTenure = tenure;
+            ltvApplied = ltvReduced;
+        } else {
+            // Default: cap tenure at 65 − age → keep higher LTV
+            effectiveTenure = maxTenureFor65;
+            ltvApplied = ltvNormal;
+        }
+    } else {
+        ltvApplied = ltvNormal;
+    }
 
     // Age-tenure table
     let ageLtvHTML = '';
     ageLtvHTML += `<tr><td>Oldest Borrower Age</td><td class="right">${oldestAge} years</td></tr>`;
-    ageLtvHTML += `<tr><td>Loan Tenure</td><td class="right">${tenure} years</td></tr>`;
-    ageLtvHTML += `<tr><td>Age + Tenure</td><td class="right">${agePlusTenure} years ${exceeds65 ? '<span class="tag tag-msr">> 65</span>' : '<span class="tag tag-ltv">≤ 65</span>'}</td></tr>`;
+    ageLtvHTML += `<tr><td>Requested Tenure</td><td class="right">${tenure} years</td></tr>`;
+    ageLtvHTML += `<tr><td>Age + Requested Tenure</td><td class="right">${agePlusTenure} years ${exceeds65 ? '<span class="tag tag-msr">> 65</span>' : '<span class="tag tag-ltv">≤ 65</span>'}</td></tr>`;
+    if (exceeds65) {
+        ageLtvHTML += `<tr><td>Max Tenure for Age+Tenure ≤ 65</td><td class="right">${maxTenureFor65} years</td></tr>`;
+        ageLtvHTML += `<tr class="total-row"><td>Effective Tenure Used</td><td class="right">${effectiveTenure} years${effectiveTenure < tenure ? ' (reduced)' : ''}</td></tr>`;
+    }
     ageLtvHTML += `<tr><td>Standard LTV (age+tenure ≤ 65)</td><td class="right">${pct(ltvNormal)}</td></tr>`;
-    ageLtvHTML += `<tr><td>Reduced LTV (age+tenure > 65)</td><td class="right">${pct(ltvReduced)}</td></tr>`;
+    if (exceeds65) {
+        ageLtvHTML += `<tr><td>Reduced LTV (age+tenure > 65)</td><td class="right">${pct(ltvReduced)}</td></tr>`;
+    }
     ageLtvHTML += `<tr class="total-row"><td>LTV Applied</td><td class="right">${pct(ltvApplied)}</td></tr>`;
     document.getElementById('ageLtvBody').innerHTML = ageLtvHTML;
 
-    // ── Max loan ──
-    const maxLoanAfford = maxLoanFromPayment(maxMonthly, stressRate, tenure);
+    // ── Max loan (use effectiveTenure for all loan math) ──
+    const maxLoanAfford = maxLoanFromPayment(maxMonthly, stressRate, effectiveTenure);
     const maxLoanLTV = ltvApplied > 0 ? propertyPrice * ltvApplied : Infinity;
     const maxLoan = propertyPrice > 0 ? Math.min(maxLoanAfford, maxLoanLTV) : maxLoanAfford;
     const limitedByLTV = propertyPrice > 0 && maxLoanLTV < maxLoanAfford;
@@ -485,8 +526,8 @@ function calculate() {
     const maxPropertyFromLoan = ltvApplied > 0 ? maxLoanAfford / ltvApplied : 0;
 
     // Actual repayment
-    const actualMonthly = monthlyPayment(maxLoan, interestRate, tenure);
-    const totalPaid = actualMonthly * tenure * 12;
+    const actualMonthly = monthlyPayment(maxLoan, interestRate, effectiveTenure);
+    const totalPaid = actualMonthly * effectiveTenure * 12;
     const totalInterest = totalPaid - maxLoan;
 
     // ── CPF OA Usage ──
@@ -534,7 +575,10 @@ function calculate() {
     }
     document.getElementById('monthlyPayment').textContent = fmt(actualMonthly) + '/mo';
     document.getElementById('totalInterest').textContent = fmt(totalInterest);
-    document.getElementById('ltvDisplay').textContent = pct(ltvApplied) + (exceeds65 ? ' (reduced — age+tenure > 65)' : '');
+    document.getElementById('ltvDisplay').textContent = pct(ltvApplied) + (exceeds65 && keepTenure ? ' (reduced — age+tenure > 65)' : '');
+    if (exceeds65 && !keepTenure) {
+        document.getElementById('monthlyPayment').textContent += ' (' + effectiveTenure + '-yr tenure)';
+    }
     document.getElementById('maxProperty').textContent = ltvApplied > 0 ? fmt(maxPropertyFromLoan) : 'N/A (LTV 0%)';
 
     document.getElementById('bindingConstraint').innerHTML = constraint +
@@ -546,7 +590,8 @@ function calculate() {
     const notes = [];
     notes.push(bankRule.note);
     if (ltvApplied === 0) notes.push('LTV is 0% — HDB loans are not available if you have outstanding home loans.');
-    if (exceeds65) notes.push('Age + tenure exceeds 65. LTV reduced from ' + pct(ltvNormal) + ' to ' + pct(ltvReduced) + '. Consider shortening tenure or adding a younger co-borrower.');
+    if (exceeds65 && keepTenure) notes.push('Age + tenure exceeds 65. LTV reduced from ' + pct(ltvNormal) + ' to ' + pct(ltvReduced) + '. You could reduce tenure to ' + maxTenureFor65 + ' years to keep the higher LTV.');
+    if (exceeds65 && !keepTenure) notes.push('Age + tenure exceeds 65. Tenure reduced from ' + tenure + ' to ' + effectiveTenure + ' years to stay within the 65-year rule and keep LTV at ' + pct(ltvNormal) + '.');
     if (isJoint) notes.push('Joint application: oldest borrower\'s age (' + oldestAge + ') used for the 65-year rule.');
     notes.push('Stress test rate of ' + stressRate.toFixed(1) + '% is used for TDSR/MSR per MAS guidelines.');
     notes.push('This calculator provides estimates. Consult your bank or mortgage broker for exact figures.');
