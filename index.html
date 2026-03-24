@@ -3,71 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Singapore Mortgage Calculator</title>
+    <title>Singapore Mortgage Calculator — Enhanced</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; color: #1a202c; line-height: 1.6; }
-        .container { max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
-        h1 { text-align: center; margin-bottom: 0.25rem; font-size: 1.8rem; color: #2d3748; }
-        .subtitle { text-align: center; color: #718096; margin-bottom: 2rem; font-size: 0.95rem; }
-        .card { background: #fff; border-radius: 12px; padding: 1.5rem 2rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .card h2 { font-size: 1.1rem; color: #2b6cb0; margin-bottom: 1rem; border-bottom: 2px solid #ebf4ff; padding-bottom: 0.5rem; }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; font-weight: 600; margin-bottom: 0.25rem; font-size: 0.9rem; }
-        label small { font-weight: 400; color: #718096; }
-        input[type="number"], select {
-            width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #cbd5e0;
-            border-radius: 8px; font-size: 1rem; transition: border-color 0.2s;
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f0f4f8;color:#1a202c;line-height:1.6}
+        .container{max-width:800px;margin:2rem auto;padding:0 1rem}
+        h1{text-align:center;margin-bottom:.25rem;font-size:1.8rem;color:#2d3748}
+        .subtitle{text-align:center;color:#718096;margin-bottom:2rem;font-size:.95rem}
+        .card{background:#fff;border-radius:12px;padding:1.5rem 2rem;margin-bottom:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+        .card h2{font-size:1.1rem;color:#2b6cb0;margin-bottom:1rem;border-bottom:2px solid #ebf4ff;padding-bottom:.5rem}
+        .card h3{font-size:.95rem;color:#4a5568;margin:1rem 0 .5rem;padding-top:.5rem;border-top:1px dashed #e2e8f0}
+        .form-group{margin-bottom:1rem}
+        label{display:block;font-weight:600;margin-bottom:.25rem;font-size:.9rem}
+        label small{font-weight:400;color:#718096}
+        input[type="number"],select{
+            width:100%;padding:.6rem .75rem;border:1px solid #cbd5e0;
+            border-radius:8px;font-size:1rem;transition:border-color .2s;
         }
-        input[type="number"]:focus, select:focus { outline: none; border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,0.15); }
-        .row { display: flex; gap: 1rem; }
-        .row .form-group { flex: 1; }
-        button {
-            width: 100%; padding: 0.75rem; background: #2b6cb0; color: #fff; border: none;
-            border-radius: 8px; font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: background 0.2s;
+        input:focus,select:focus{outline:none;border-color:#4299e1;box-shadow:0 0 0 3px rgba(66,153,225,.15)}
+        .row{display:flex;gap:1rem}
+        .row .form-group{flex:1}
+        .row3{display:flex;gap:1rem}
+        .row3 .form-group{flex:1}
+        button{
+            width:100%;padding:.75rem;background:#2b6cb0;color:#fff;border:none;
+            border-radius:8px;font-size:1.05rem;font-weight:600;cursor:pointer;transition:background .2s;
         }
-        button:hover { background: #2c5282; }
-        .results { display: none; }
-        .result-row { display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid #edf2f7; }
-        .result-row:last-child { border-bottom: none; }
-        .result-label { color: #4a5568; }
-        .result-value { font-weight: 700; color: #2d3748; }
-        .result-value.highlight { color: #2b6cb0; font-size: 1.15rem; }
-        .result-value.warning { color: #c53030; }
-        .note { background: #fffaf0; border-left: 4px solid #ed8936; padding: 0.75rem 1rem; border-radius: 0 8px 8px 0; margin-top: 1rem; font-size: 0.85rem; color: #744210; }
-        .breakdown { margin-top: 0.5rem; }
-        .breakdown-item { font-size: 0.85rem; color: #718096; padding: 0.2rem 0; }
-        @media (max-width: 500px) { .row { flex-direction: column; gap: 0; } }
+        button:hover{background:#2c5282}
+        .toggle-row{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem}
+        .toggle{position:relative;width:48px;height:26px;flex-shrink:0}
+        .toggle input{opacity:0;width:0;height:0}
+        .toggle .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e0;border-radius:13px;transition:.3s}
+        .toggle .slider:before{content:"";position:absolute;height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+        .toggle input:checked+.slider{background:#2b6cb0}
+        .toggle input:checked+.slider:before{transform:translateX(22px)}
+        .joint-section{display:none;border-top:2px solid #ebf4ff;padding-top:1rem;margin-top:.5rem}
+        .joint-section.active{display:block}
+        .results{display:none}
+        .result-row{display:flex;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid #edf2f7;flex-wrap:wrap}
+        .result-row:last-child{border-bottom:none}
+        .result-label{color:#4a5568}
+        .result-value{font-weight:700;color:#2d3748}
+        .result-value.highlight{color:#2b6cb0;font-size:1.15rem}
+        .result-value.warning{color:#c53030}
+        .note{background:#fffaf0;border-left:4px solid #ed8936;padding:.75rem 1rem;border-radius:0 8px 8px 0;margin-top:1rem;font-size:.85rem;color:#744210}
+        .breakdown-table{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:.88rem}
+        .breakdown-table th{text-align:left;padding:.4rem .5rem;background:#ebf4ff;color:#2b6cb0;font-weight:600}
+        .breakdown-table td{padding:.4rem .5rem;border-bottom:1px solid #edf2f7}
+        .breakdown-table tr:last-child td{border-bottom:none}
+        .breakdown-table .right{text-align:right}
+        .breakdown-table .total-row td{font-weight:700;border-top:2px solid #2b6cb0;background:#f7fafc}
+        .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.75rem;font-weight:600;margin-left:.5rem}
+        .tag-msr{background:#fed7d7;color:#c53030}
+        .tag-tdsr{background:#bee3f8;color:#2a4365}
+        .tag-ltv{background:#c6f6d5;color:#22543d}
+        .cpf-table{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:.88rem}
+        .cpf-table th{text-align:left;padding:.4rem .5rem;background:#f0fff4;color:#276749;font-weight:600}
+        .cpf-table td{padding:.4rem .5rem;border-bottom:1px solid #edf2f7}
+        .info-icon{cursor:help;display:inline-block;width:16px;height:16px;line-height:16px;text-align:center;background:#e2e8f0;color:#4a5568;border-radius:50%;font-size:.7rem;font-weight:700;vertical-align:middle;margin-left:4px}
+        .tooltip-wrap{position:relative;display:inline-block}
+        .tooltip-wrap .tip{display:none;position:absolute;bottom:120%;left:50%;transform:translateX(-50%);background:#2d3748;color:#fff;padding:.5rem .75rem;border-radius:6px;font-size:.78rem;font-weight:400;width:260px;z-index:10;line-height:1.4}
+        .tooltip-wrap:hover .tip{display:block}
+        @media(max-width:600px){.row,.row3{flex-direction:column;gap:0}}
     </style>
 </head>
 <body>
 <div class="container">
     <h1>Singapore Mortgage Calculator</h1>
-    <p class="subtitle">Calculate your maximum mortgage based on MAS regulations</p>
+    <p class="subtitle">Enhanced — bank-specific income rules, joint applications, age-tenure LTV &amp; CPF</p>
 
+    <!-- BANK SELECTION -->
     <div class="card">
-        <h2>Your Income &amp; Obligations</h2>
+        <h2>Bank Selection</h2>
         <div class="form-group">
-            <label>Gross Monthly Income (SGD)</label>
-            <input type="number" id="income" value="8000" min="0" step="100">
-        </div>
-        <div class="form-group">
-            <label>Existing Monthly Debt Obligations (SGD) <small>car loans, credit cards, etc.</small></label>
-            <input type="number" id="existingDebt" value="0" min="0" step="50">
+            <label>Lender
+                <span class="tooltip-wrap"><span class="info-icon">?</span>
+                    <span class="tip">Each bank applies different haircuts to variable income (commission, bonuses, overtime). MAS mandates a minimum 30% haircut but banks may be stricter.</span>
+                </span>
+            </label>
+            <select id="bank">
+                <option value="dbs">DBS / POSB</option>
+                <option value="ocbc">OCBC</option>
+                <option value="uob">UOB</option>
+                <option value="scb">Standard Chartered</option>
+                <option value="hsbc">HSBC</option>
+                <option value="maybank">Maybank</option>
+            </select>
         </div>
     </div>
 
+    <!-- BORROWER 1 -->
     <div class="card">
-        <h2>Property Details</h2>
-        <div class="form-group">
-            <label>Property Type</label>
-            <select id="propertyType">
-                <option value="hdb">HDB Flat</option>
-                <option value="ec">Executive Condo (from developer)</option>
-                <option value="private" selected>Private Property</option>
-            </select>
+        <h2>Primary Borrower</h2>
+        <div class="row3">
+            <div class="form-group">
+                <label>Age (years)</label>
+                <input type="number" id="age1" value="35" min="21" max="75">
+            </div>
+            <div class="form-group">
+                <label>Fixed Monthly Income (SGD) <small>base salary</small></label>
+                <input type="number" id="fixedIncome1" value="6000" min="0" step="100">
+            </div>
+            <div class="form-group">
+                <label>Variable Monthly Income (SGD) <small>avg commission/bonus/OT</small></label>
+                <input type="number" id="variableIncome1" value="2000" min="0" step="100">
+            </div>
         </div>
         <div class="row">
+            <div class="form-group">
+                <label>Existing Monthly Debt (SGD) <small>car loans, credit cards, etc.</small></label>
+                <input type="number" id="debt1" value="0" min="0" step="50">
+            </div>
+            <div class="form-group">
+                <label>CPF OA Balance (SGD)</label>
+                <input type="number" id="cpfOA1" value="50000" min="0" step="1000">
+            </div>
+        </div>
+
+        <!-- Joint toggle -->
+        <div class="toggle-row">
+            <label class="toggle">
+                <input type="checkbox" id="jointToggle" onchange="toggleJoint()">
+                <span class="slider"></span>
+            </label>
+            <label style="font-weight:600;cursor:pointer" onclick="document.getElementById('jointToggle').click()">Joint Application</label>
+        </div>
+
+        <!-- Borrower 2 -->
+        <div class="joint-section" id="jointSection">
+            <h3>Co-Borrower</h3>
+            <div class="row3">
+                <div class="form-group">
+                    <label>Age (years)</label>
+                    <input type="number" id="age2" value="33" min="21" max="75">
+                </div>
+                <div class="form-group">
+                    <label>Fixed Monthly Income (SGD)</label>
+                    <input type="number" id="fixedIncome2" value="4000" min="0" step="100">
+                </div>
+                <div class="form-group">
+                    <label>Variable Monthly Income (SGD)</label>
+                    <input type="number" id="variableIncome2" value="1000" min="0" step="100">
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label>Existing Monthly Debt (SGD)</label>
+                    <input type="number" id="debt2" value="0" min="0" step="50">
+                </div>
+                <div class="form-group">
+                    <label>CPF OA Balance (SGD)</label>
+                    <input type="number" id="cpfOA2" value="30000" min="0" step="1000">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROPERTY -->
+    <div class="card">
+        <h2>Property &amp; Loan Details</h2>
+        <div class="row">
+            <div class="form-group">
+                <label>Property Type</label>
+                <select id="propertyType">
+                    <option value="hdb">HDB Flat</option>
+                    <option value="ec">Executive Condo (from developer)</option>
+                    <option value="private" selected>Private Property</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Property Price (SGD) <small>optional — for CPF &amp; cash calc</small></label>
+                <input type="number" id="propertyPrice" value="1000000" min="0" step="10000">
+            </div>
+        </div>
+        <div class="row3">
             <div class="form-group">
                 <label>Loan Tenure (years)</label>
                 <input type="number" id="tenure" value="25" min="1" max="30">
@@ -76,29 +185,30 @@
                 <label>Interest Rate (% p.a.)</label>
                 <input type="number" id="interestRate" value="3.5" min="0.1" max="10" step="0.1">
             </div>
-        </div>
-        <div class="row">
             <div class="form-group">
                 <label>Outstanding Home Loans</label>
                 <select id="outstandingLoans">
                     <option value="0" selected>None (1st property)</option>
                     <option value="1">1 outstanding loan</option>
-                    <option value="2">2 or more outstanding loans</option>
+                    <option value="2">2 or more</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label>Loan Type</label>
-                <select id="loanType">
-                    <option value="bank" selected>Bank Loan</option>
-                    <option value="hdb">HDB Loan</option>
-                </select>
-            </div>
+        </div>
+        <div class="form-group">
+            <label>Loan Type</label>
+            <select id="loanType">
+                <option value="bank" selected>Bank Loan</option>
+                <option value="hdb">HDB Loan</option>
+            </select>
         </div>
     </div>
 
     <button onclick="calculate()">Calculate Maximum Mortgage</button>
 
+    <!-- RESULTS -->
     <div class="results" id="results">
+
+        <!-- HEADLINE -->
         <div class="card">
             <h2>Your Maximum Mortgage</h2>
             <div class="result-row">
@@ -106,7 +216,7 @@
                 <span class="result-value highlight" id="maxLoan">-</span>
             </div>
             <div class="result-row">
-                <span class="result-label">Monthly Repayment</span>
+                <span class="result-label">Monthly Repayment (at actual rate)</span>
                 <span class="result-value" id="monthlyPayment">-</span>
             </div>
             <div class="result-row">
@@ -115,7 +225,7 @@
             </div>
             <div class="result-row">
                 <span class="result-label">LTV Ratio Applied</span>
-                <span class="result-value" id="ltvRatio">-</span>
+                <span class="result-value" id="ltvDisplay">-</span>
             </div>
             <div class="result-row">
                 <span class="result-label">Estimated Max Property Price</span>
@@ -123,45 +233,102 @@
             </div>
         </div>
 
+        <!-- INCOME BREAKDOWN -->
         <div class="card">
-            <h2>Regulatory Limits</h2>
-            <div class="result-row">
-                <span class="result-label">TDSR Limit (55% of gross income)</span>
-                <span class="result-value" id="tdsrLimit">-</span>
+            <h2>Income Assessment by <span id="bankLabel">Bank</span></h2>
+            <table class="breakdown-table" id="incomeTable">
+                <thead>
+                    <tr><th>Component</th><th class="right">Gross</th><th class="right">Haircut</th><th class="right">Assessed</th></tr>
+                </thead>
+                <tbody id="incomeBody"></tbody>
+            </table>
+        </div>
+
+        <!-- TDSR / MSR QUANTUM BREAKDOWN -->
+        <div class="card">
+            <h2>TDSR / MSR Quantum Breakdown</h2>
+            <table class="breakdown-table" id="tdsrTable">
+                <thead>
+                    <tr><th>Item</th><th class="right">Amount / mo</th></tr>
+                </thead>
+                <tbody id="tdsrBody"></tbody>
+            </table>
+            <div id="msrSection" style="display:none">
+                <h3>MSR Breakdown <span class="tag tag-msr">Applies</span></h3>
+                <table class="breakdown-table">
+                    <thead>
+                        <tr><th>Item</th><th class="right">Amount / mo</th></tr>
+                    </thead>
+                    <tbody id="msrBody"></tbody>
+                </table>
             </div>
-            <div class="result-row">
-                <span class="result-label">Available for Mortgage (after existing debt)</span>
-                <span class="result-value" id="tdsrAvailable">-</span>
-            </div>
-            <div id="msrRow" class="result-row" style="display:none;">
-                <span class="result-label">MSR Limit (30% of gross income)</span>
-                <span class="result-value" id="msrLimit">-</span>
-            </div>
-            <div class="result-row">
+            <div class="result-row" style="margin-top:1rem">
                 <span class="result-label">Binding Constraint</span>
                 <span class="result-value" id="bindingConstraint">-</span>
             </div>
             <div class="result-row">
-                <span class="result-label">Stress Test Rate Used</span>
+                <span class="result-label">Max Monthly Repayment (stress-tested)</span>
+                <span class="result-value" id="maxMonthlyDisplay">-</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">Stress Test Rate</span>
                 <span class="result-value" id="stressRate">-</span>
             </div>
         </div>
 
+        <!-- AGE-TENURE LTV -->
+        <div class="card">
+            <h2>Age + Tenure LTV Interaction
+                <span class="tooltip-wrap"><span class="info-icon">?</span>
+                    <span class="tip">If the oldest borrower's age + loan tenure exceeds 65, the LTV limit is reduced. For borrowers aged 65+, tenure is capped at the remaining working years up to 75.</span>
+                </span>
+            </h2>
+            <table class="breakdown-table">
+                <tbody id="ageLtvBody"></tbody>
+            </table>
+        </div>
+
+        <!-- CPF USAGE -->
+        <div class="card">
+            <h2>CPF OA Usage Estimate</h2>
+            <table class="cpf-table">
+                <thead>
+                    <tr><th>Item</th><th class="right">Amount</th></tr>
+                </thead>
+                <tbody id="cpfBody"></tbody>
+            </table>
+            <div class="note" style="margin-top:.75rem" id="cpfNote"></div>
+        </div>
+
+        <!-- NOTES -->
         <div class="note" id="noteBox"></div>
     </div>
 </div>
 
 <script>
-function getLTV(outstandingLoans, loanType) {
+/* ── Bank-specific variable-income haircut rules ── */
+const BANK_RULES = {
+    dbs:     { name: 'DBS / POSB',        haircut: 0.30, minYears: 2, note: '30% haircut on variable income; 2-year track record required.' },
+    ocbc:    { name: 'OCBC',              haircut: 0.30, minYears: 2, note: '30% haircut; need 2 years of variable income history.' },
+    uob:     { name: 'UOB',               haircut: 0.30, minYears: 2, note: '30% haircut on variable; 2-year track record.' },
+    scb:     { name: 'Standard Chartered', haircut: 0.30, minYears: 2, note: '30% haircut on variable income; may accept 1 year for high earners.' },
+    hsbc:    { name: 'HSBC',              haircut: 0.30, minYears: 2, note: '30% haircut; requires 2 years proof for variable component.' },
+    maybank: { name: 'Maybank',           haircut: 0.40, minYears: 2, note: '40% haircut on variable income — stricter than MAS minimum.' }
+};
+
+/* ── LTV rules (MAS) ── */
+function getLTV(outstandingLoans, loanType, ageTenureExceeds65) {
     if (loanType === 'hdb') {
-        return outstandingLoans === 0 ? 0.80 : 0;
+        if (outstandingLoans > 0) return 0;
+        return ageTenureExceeds65 ? 0.55 : 0.80;
     }
-    if (outstandingLoans === 0) return 0.75;
-    if (outstandingLoans === 1) return 0.45;
-    return 0.35;
+    if (outstandingLoans === 0) return ageTenureExceeds65 ? 0.55 : 0.75;
+    if (outstandingLoans === 1) return ageTenureExceeds65 ? 0.25 : 0.45;
+    return ageTenureExceeds65 ? 0.15 : 0.35;
 }
 
-function monthlyPaymentForLoan(principal, annualRate, years) {
+/* ── Loan math ── */
+function monthlyPayment(principal, annualRate, years) {
     const r = annualRate / 100 / 12;
     const n = years * 12;
     if (r === 0) return principal / n;
@@ -179,30 +346,109 @@ function fmt(num) {
     return 'SGD ' + Math.round(num).toLocaleString('en-SG');
 }
 
+function pct(num) {
+    return (num * 100).toFixed(0) + '%';
+}
+
+/* ── Joint toggle ── */
+function toggleJoint() {
+    const on = document.getElementById('jointToggle').checked;
+    document.getElementById('jointSection').classList.toggle('active', on);
+}
+
+/* ── Main calculation ── */
 function calculate() {
-    const income = parseFloat(document.getElementById('income').value) || 0;
-    const existingDebt = parseFloat(document.getElementById('existingDebt').value) || 0;
+    const bank = document.getElementById('bank').value;
+    const bankRule = BANK_RULES[bank];
+
+    const isJoint = document.getElementById('jointToggle').checked;
+
+    // Borrower 1
+    const age1 = parseInt(document.getElementById('age1').value) || 35;
+    const fixed1 = parseFloat(document.getElementById('fixedIncome1').value) || 0;
+    const variable1 = parseFloat(document.getElementById('variableIncome1').value) || 0;
+    const debt1 = parseFloat(document.getElementById('debt1').value) || 0;
+    const cpfOA1 = parseFloat(document.getElementById('cpfOA1').value) || 0;
+
+    // Borrower 2 (if joint)
+    const age2 = isJoint ? (parseInt(document.getElementById('age2').value) || 33) : null;
+    const fixed2 = isJoint ? (parseFloat(document.getElementById('fixedIncome2').value) || 0) : 0;
+    const variable2 = isJoint ? (parseFloat(document.getElementById('variableIncome2').value) || 0) : 0;
+    const debt2 = isJoint ? (parseFloat(document.getElementById('debt2').value) || 0) : 0;
+    const cpfOA2 = isJoint ? (parseFloat(document.getElementById('cpfOA2').value) || 0) : 0;
+
+    // Property & loan
     const propertyType = document.getElementById('propertyType').value;
-    const tenure = Math.min(parseFloat(document.getElementById('tenure').value) || 25, 30);
+    const propertyPrice = parseFloat(document.getElementById('propertyPrice').value) || 0;
+    const tenure = Math.min(Math.max(parseFloat(document.getElementById('tenure').value) || 25, 1), 30);
     const interestRate = parseFloat(document.getElementById('interestRate').value) || 3.5;
     const outstandingLoans = parseInt(document.getElementById('outstandingLoans').value);
     const loanType = document.getElementById('loanType').value;
 
-    // MAS stress test rate: higher of 4% or actual rate + 2% for bank loans
+    // ── Income assessment ──
+    const haircut = bankRule.haircut;
+    const assessed1Fixed = fixed1;
+    const assessed1Var = variable1 * (1 - haircut);
+    const assessed2Fixed = fixed2;
+    const assessed2Var = variable2 * (1 - haircut);
+
+    const totalAssessedIncome = assessed1Fixed + assessed1Var + assessed2Fixed + assessed2Var;
+    const totalGross = fixed1 + variable1 + fixed2 + variable2;
+    const totalDebt = debt1 + debt2;
+
+    // ── Income table ──
+    const incomeRows = [];
+    incomeRows.push(['Borrower 1 — Fixed', fixed1, 0, assessed1Fixed]);
+    incomeRows.push(['Borrower 1 — Variable', variable1, haircut, assessed1Var]);
+    if (isJoint) {
+        incomeRows.push(['Borrower 2 — Fixed', fixed2, 0, assessed2Fixed]);
+        incomeRows.push(['Borrower 2 — Variable', variable2, haircut, assessed2Var]);
+    }
+
+    let incomeHTML = '';
+    incomeRows.forEach(r => {
+        incomeHTML += `<tr><td>${r[0]}</td><td class="right">${fmt(r[1])}</td><td class="right">${r[2] > 0 ? pct(r[2]) : '—'}</td><td class="right">${fmt(r[3])}</td></tr>`;
+    });
+    incomeHTML += `<tr class="total-row"><td>Total Assessed Income</td><td class="right">${fmt(totalGross)}</td><td class="right"></td><td class="right">${fmt(totalAssessedIncome)}</td></tr>`;
+    document.getElementById('incomeBody').innerHTML = incomeHTML;
+    document.getElementById('bankLabel').textContent = bankRule.name;
+
+    // ── Stress test rate ──
     const stressRate = loanType === 'hdb' ? interestRate : Math.max(4.0, interestRate + 0.5);
 
-    // TDSR: 55% of gross monthly income
-    const tdsrMax = income * 0.55;
-    const tdsrAvailable = Math.max(0, tdsrMax - existingDebt);
+    // ── TDSR: 55% of assessed income ──
+    const tdsrCap = totalAssessedIncome * 0.55;
+    const tdsrAvailable = Math.max(0, tdsrCap - totalDebt);
 
-    // MSR: 30% of gross monthly income (applies to HDB and EC from developer)
+    // ── MSR: 30% of assessed income (HDB / EC from developer) ──
     const msrApplies = propertyType === 'hdb' || propertyType === 'ec';
-    const msrMax = income * 0.30;
-    const msrAvailable = Math.max(0, msrMax - existingDebt);
+    const msrCap = totalAssessedIncome * 0.30;
+    const msrAvailable = Math.max(0, msrCap - totalDebt);
 
-    // The binding monthly limit
-    let maxMonthly;
-    let constraint;
+    // ── TDSR breakdown table ──
+    let tdsrHTML = '';
+    tdsrHTML += `<tr><td>Total Assessed Income</td><td class="right">${fmt(totalAssessedIncome)}</td></tr>`;
+    tdsrHTML += `<tr><td>TDSR Limit (55%)</td><td class="right">${fmt(tdsrCap)}</td></tr>`;
+    tdsrHTML += `<tr><td>Less: Existing Debt Obligations</td><td class="right">− ${fmt(totalDebt)}</td></tr>`;
+    tdsrHTML += `<tr class="total-row"><td>Available for Mortgage (TDSR)</td><td class="right">${fmt(tdsrAvailable)}</td></tr>`;
+    document.getElementById('tdsrBody').innerHTML = tdsrHTML;
+
+    // ── MSR breakdown ──
+    const msrSection = document.getElementById('msrSection');
+    if (msrApplies) {
+        msrSection.style.display = 'block';
+        let msrHTML = '';
+        msrHTML += `<tr><td>Total Assessed Income</td><td class="right">${fmt(totalAssessedIncome)}</td></tr>`;
+        msrHTML += `<tr><td>MSR Limit (30%)</td><td class="right">${fmt(msrCap)}</td></tr>`;
+        msrHTML += `<tr><td>Less: Existing Debt Obligations</td><td class="right">− ${fmt(totalDebt)}</td></tr>`;
+        msrHTML += `<tr class="total-row"><td>Available for Mortgage (MSR)</td><td class="right">${fmt(msrAvailable)}</td></tr>`;
+        document.getElementById('msrBody').innerHTML = msrHTML;
+    } else {
+        msrSection.style.display = 'none';
+    }
+
+    // ── Binding constraint ──
+    let maxMonthly, constraint;
     if (msrApplies) {
         maxMonthly = Math.min(tdsrAvailable, msrAvailable);
         constraint = msrAvailable < tdsrAvailable ? 'MSR (30%)' : 'TDSR (55%)';
@@ -211,45 +457,99 @@ function calculate() {
         constraint = 'TDSR (55%)';
     }
 
-    // Max loan from affordability (using stress test rate)
+    // ── Age + Tenure LTV interaction (65-year rule) ──
+    const oldestAge = isJoint ? Math.max(age1, age2) : age1;
+    const agePlusTenure = oldestAge + tenure;
+    const exceeds65 = agePlusTenure > 65;
+
+    const ltvNormal = getLTV(outstandingLoans, loanType, false);
+    const ltvReduced = getLTV(outstandingLoans, loanType, true);
+    const ltvApplied = exceeds65 ? ltvReduced : ltvNormal;
+
+    // Age-tenure table
+    let ageLtvHTML = '';
+    ageLtvHTML += `<tr><td>Oldest Borrower Age</td><td class="right">${oldestAge} years</td></tr>`;
+    ageLtvHTML += `<tr><td>Loan Tenure</td><td class="right">${tenure} years</td></tr>`;
+    ageLtvHTML += `<tr><td>Age + Tenure</td><td class="right">${agePlusTenure} years ${exceeds65 ? '<span class="tag tag-msr">> 65</span>' : '<span class="tag tag-ltv">≤ 65</span>'}</td></tr>`;
+    ageLtvHTML += `<tr><td>Standard LTV (age+tenure ≤ 65)</td><td class="right">${pct(ltvNormal)}</td></tr>`;
+    ageLtvHTML += `<tr><td>Reduced LTV (age+tenure > 65)</td><td class="right">${pct(ltvReduced)}</td></tr>`;
+    ageLtvHTML += `<tr class="total-row"><td>LTV Applied</td><td class="right">${pct(ltvApplied)}</td></tr>`;
+    document.getElementById('ageLtvBody').innerHTML = ageLtvHTML;
+
+    // ── Max loan ──
     const maxLoanAfford = maxLoanFromPayment(maxMonthly, stressRate, tenure);
+    const maxLoanLTV = ltvApplied > 0 ? propertyPrice * ltvApplied : Infinity;
+    const maxLoan = propertyPrice > 0 ? Math.min(maxLoanAfford, maxLoanLTV) : maxLoanAfford;
+    const limitedByLTV = propertyPrice > 0 && maxLoanLTV < maxLoanAfford;
 
-    // LTV
-    const ltv = getLTV(outstandingLoans, loanType);
+    const maxPropertyFromLoan = ltvApplied > 0 ? maxLoanAfford / ltvApplied : 0;
 
-    // Max property price from LTV and loan
-    const maxPropertyFromLoan = ltv > 0 ? maxLoanAfford / ltv : 0;
-
-    // Actual monthly payment at real interest rate
-    const actualMonthly = monthlyPaymentForLoan(maxLoanAfford, interestRate, tenure);
+    // Actual repayment
+    const actualMonthly = monthlyPayment(maxLoan, interestRate, tenure);
     const totalPaid = actualMonthly * tenure * 12;
-    const totalInterest = totalPaid - maxLoanAfford;
+    const totalInterest = totalPaid - maxLoan;
 
-    // Display
-    document.getElementById('maxLoan').textContent = fmt(maxLoanAfford);
+    // ── CPF OA Usage ──
+    // Withdrawal limit per borrower = property valuation limit (we use property price as proxy)
+    // Each borrower can use up to their WL from CPF OA
+    const downPayment = propertyPrice > 0 ? propertyPrice - maxLoan : 0;
+    const minCash = loanType === 'bank' ? propertyPrice * 0.05 : 0; // 5% minimum cash for bank loans (first property)
+    const minCashAdjusted = outstandingLoans === 0 ? minCash : propertyPrice * 0.25; // 25% cash for 2nd property
+
+    const cpfAvailable1 = cpfOA1;
+    const cpfAvailable2 = isJoint ? cpfOA2 : 0;
+    const totalCPF = cpfAvailable1 + cpfAvailable2;
+    const cpfForDownPayment = Math.min(totalCPF, Math.max(0, downPayment - minCashAdjusted));
+    const cashRequired = Math.max(0, downPayment - cpfForDownPayment);
+
+    let cpfHTML = '';
+    cpfHTML += `<tr><td>Property Price</td><td class="right">${fmt(propertyPrice)}</td></tr>`;
+    cpfHTML += `<tr><td>Maximum Loan</td><td class="right">${fmt(maxLoan)}</td></tr>`;
+    cpfHTML += `<tr><td>Down Payment Required</td><td class="right">${fmt(downPayment)}</td></tr>`;
+    cpfHTML += `<tr><td>Minimum Cash Component</td><td class="right">${fmt(minCashAdjusted)}</td></tr>`;
+    cpfHTML += `<tr><td>Borrower 1 CPF OA Available</td><td class="right">${fmt(cpfAvailable1)}</td></tr>`;
+    if (isJoint) {
+        cpfHTML += `<tr><td>Borrower 2 CPF OA Available</td><td class="right">${fmt(cpfAvailable2)}</td></tr>`;
+    }
+    cpfHTML += `<tr class="total-row"><td>CPF Usable for Down Payment</td><td class="right">${fmt(cpfForDownPayment)}</td></tr>`;
+    cpfHTML += `<tr class="total-row"><td>Cash Required</td><td class="right">${fmt(cashRequired)}</td></tr>`;
+    document.getElementById('cpfBody').innerHTML = cpfHTML;
+
+    const cpfNotes = [];
+    if (outstandingLoans === 0 && loanType === 'bank') {
+        cpfNotes.push('First property with bank loan: minimum 5% cash, up to 20% payable by CPF, remaining 75% financed.');
+    } else if (outstandingLoans > 0) {
+        cpfNotes.push('With outstanding loans: higher cash down payment required (25% for 2nd property).');
+    }
+    if (isJoint) {
+        cpfNotes.push('Joint applicants: both CPF OA balances can be used subject to individual withdrawal limits.');
+    }
+    cpfNotes.push('CPF withdrawal limit per person is capped at the property valuation. Amounts above the limit require cash.');
+    document.getElementById('cpfNote').innerHTML = cpfNotes.join('<br>');
+
+    // ── Display headline results ──
+    document.getElementById('maxLoan').textContent = fmt(maxLoan);
+    if (limitedByLTV) {
+        document.getElementById('maxLoan').innerHTML = fmt(maxLoan) + ' <span class="tag tag-ltv">LTV-limited</span>';
+    }
     document.getElementById('monthlyPayment').textContent = fmt(actualMonthly) + '/mo';
     document.getElementById('totalInterest').textContent = fmt(totalInterest);
-    document.getElementById('ltvRatio').textContent = (ltv * 100) + '%';
-    document.getElementById('maxProperty').textContent = ltv > 0 ? fmt(maxPropertyFromLoan) : 'N/A';
-    document.getElementById('tdsrLimit').textContent = fmt(tdsrMax) + '/mo';
-    document.getElementById('tdsrAvailable').textContent = fmt(tdsrAvailable) + '/mo';
+    document.getElementById('ltvDisplay').textContent = pct(ltvApplied) + (exceeds65 ? ' (reduced — age+tenure > 65)' : '');
+    document.getElementById('maxProperty').textContent = ltvApplied > 0 ? fmt(maxPropertyFromLoan) : 'N/A (LTV 0%)';
+
+    document.getElementById('bindingConstraint').innerHTML = constraint +
+        (constraint.includes('MSR') ? ' <span class="tag tag-msr">MSR</span>' : ' <span class="tag tag-tdsr">TDSR</span>');
+    document.getElementById('maxMonthlyDisplay').textContent = fmt(maxMonthly) + '/mo';
     document.getElementById('stressRate').textContent = stressRate.toFixed(1) + '% p.a.';
-    document.getElementById('bindingConstraint').textContent = constraint;
 
-    const msrRow = document.getElementById('msrRow');
-    if (msrApplies) {
-        msrRow.style.display = 'flex';
-        document.getElementById('msrLimit').textContent = fmt(msrMax) + '/mo';
-    } else {
-        msrRow.style.display = 'none';
-    }
-
-    // Notes
+    // ── Notes ──
     const notes = [];
-    if (ltv === 0) notes.push('HDB loans are not available if you have outstanding home loans.');
-    if (outstandingLoans > 0) notes.push('Lower LTV applies due to existing outstanding home loan(s). Higher cash/CPF down payment required.');
-    notes.push('Stress test rate of ' + stressRate.toFixed(1) + '% is used for TDSR/MSR calculations per MAS guidelines.');
-    notes.push('This calculator provides estimates only. Consult a bank or mortgage broker for exact figures.');
+    notes.push(bankRule.note);
+    if (ltvApplied === 0) notes.push('LTV is 0% — HDB loans are not available if you have outstanding home loans.');
+    if (exceeds65) notes.push('Age + tenure exceeds 65. LTV reduced from ' + pct(ltvNormal) + ' to ' + pct(ltvReduced) + '. Consider shortening tenure or adding a younger co-borrower.');
+    if (isJoint) notes.push('Joint application: oldest borrower\'s age (' + oldestAge + ') used for the 65-year rule.');
+    notes.push('Stress test rate of ' + stressRate.toFixed(1) + '% is used for TDSR/MSR per MAS guidelines.');
+    notes.push('This calculator provides estimates. Consult your bank or mortgage broker for exact figures.');
     document.getElementById('noteBox').innerHTML = notes.join('<br>');
 
     document.getElementById('results').style.display = 'block';
