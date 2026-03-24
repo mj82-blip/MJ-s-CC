@@ -210,7 +210,7 @@
             </div>
             <div class="form-group">
                 <label>Property Price (SGD) <small>optional — for CPF &amp; cash calc</small></label>
-                <input type="number" id="propertyPrice" value="1000000" min="0" step="10000">
+                <input type="number" id="propertyPrice" placeholder="Leave empty for max loan only" min="0" step="10000">
             </div>
         </div>
         <div class="row3">
@@ -354,8 +354,8 @@
             </table>
         </div>
 
-        <!-- CPF USAGE -->
-        <div class="card">
+        <!-- CPF USAGE (only when property price entered) -->
+        <div class="card" id="cpfCard" style="display:none">
             <h2>CPF OA Usage Estimate</h2>
             <table class="cpf-table">
                 <thead>
@@ -444,16 +444,6 @@ function toggleJoint() {
     document.getElementById('jointSection').classList.toggle('active', on);
     calculate();
 }
-
-/* ── Live calculation on any input change ── */
-(function init() {
-    const inputs = document.querySelectorAll('input[type="number"], select');
-    inputs.forEach(el => {
-        el.addEventListener('input', calculate);
-        el.addEventListener('change', calculate);
-    });
-    calculate();
-})();
 
 /* ── Main calculation ── */
 function calculate() {
@@ -611,6 +601,10 @@ function calculate() {
     const maxLoan = propertyPrice > 0 ? Math.min(maxLoanAfford, maxLoanLTV) : maxLoanAfford;
     const limitedByLTV = propertyPrice > 0 && maxLoanLTV < maxLoanAfford;
 
+    // ── Available funds ──
+    const totalCPF = cpfOA1 + (isJoint ? cpfOA2 : 0);
+    const totalCash = cash1 + cash2;
+
     // ── Cash-constrained max property price ──
     // maxPropertyFromLoan = income-based max, but we also need enough cash+CPF for down payment + BSD
     // Formula: price = loan + downPayment, where downPayment needs cash + CPF coverage
@@ -646,64 +640,64 @@ function calculate() {
     const totalPaid = actualMonthly * effectiveTenure * 12;
     const totalInterest = totalPaid - maxLoan;
 
-    // ── CPF OA Usage ──
-    // Withdrawal limit per borrower = property valuation limit (we use property price as proxy)
-    // Each borrower can use up to their WL from CPF OA
-    const downPayment = propertyPrice > 0 ? propertyPrice - maxLoan : 0;
-    const minCash = loanType === 'bank' ? propertyPrice * 0.05 : 0; // 5% minimum cash for bank loans (first property)
-    const minCashAdjusted = outstandingLoans === 0 ? minCash : propertyPrice * 0.25; // 25% cash for 2nd property
+    // ── CPF OA Usage (only when property price is entered) ──
+    const cpfCard = document.getElementById('cpfCard');
+    if (propertyPrice > 0) {
+        cpfCard.style.display = '';
+        const downPayment = propertyPrice - maxLoan;
+        const minCash = loanType === 'bank' ? propertyPrice * 0.05 : 0;
+        const minCashAdjusted = outstandingLoans === 0 ? minCash : propertyPrice * 0.25;
 
-    const cpfAvailable1 = cpfOA1;
-    const cpfAvailable2 = isJoint ? cpfOA2 : 0;
-    const totalCPF = cpfAvailable1 + cpfAvailable2;
-    const totalCash = cash1 + cash2;
-    const cpfForDownPayment = Math.min(totalCPF, Math.max(0, downPayment - minCashAdjusted));
-    const cashRequired = Math.max(0, downPayment - cpfForDownPayment);
-    const bsdForProperty = propertyPrice > 0 ? calcBSD(propertyPrice) : 0;
-    const totalCashNeeded = cashRequired + bsdForProperty;
-    const cashShortfall = Math.max(0, totalCashNeeded - totalCash);
-    const cashSurplus = Math.max(0, totalCash - totalCashNeeded);
+        const cpfForDownPayment = Math.min(totalCPF, Math.max(0, downPayment - minCashAdjusted));
+        const cashRequired = Math.max(0, downPayment - cpfForDownPayment);
+        const bsdForProperty = calcBSD(propertyPrice);
+        const totalCashNeeded = cashRequired + bsdForProperty;
+        const cashShortfall = Math.max(0, totalCashNeeded - totalCash);
+        const cashSurplus = Math.max(0, totalCash - totalCashNeeded);
 
-    let cpfHTML = '';
-    cpfHTML += `<tr><td>Property Price</td><td class="right">${fmt(propertyPrice)}</td></tr>`;
-    cpfHTML += `<tr><td>Maximum Loan</td><td class="right">${fmt(maxLoan)}</td></tr>`;
-    cpfHTML += `<tr><td>Down Payment Required</td><td class="right">${fmt(downPayment)}</td></tr>`;
-    cpfHTML += `<tr><td>Minimum Cash Component</td><td class="right">${fmt(minCashAdjusted)}</td></tr>`;
-    cpfHTML += `<tr><td>Borrower 1 CPF OA Available</td><td class="right">${fmt(cpfAvailable1)}</td></tr>`;
-    if (isJoint) {
-        cpfHTML += `<tr><td>Borrower 2 CPF OA Available</td><td class="right">${fmt(cpfAvailable2)}</td></tr>`;
-    }
-    cpfHTML += `<tr class="total-row"><td>CPF Usable for Down Payment</td><td class="right">${fmt(cpfForDownPayment)}</td></tr>`;
-    cpfHTML += `<tr><td colspan="2" style="padding-top:.75rem;font-weight:600;color:#2b6cb0">Cash Position</td></tr>`;
-    cpfHTML += `<tr><td>Borrower 1 Available Cash</td><td class="right">${fmt(cash1)}</td></tr>`;
-    if (isJoint) {
-        cpfHTML += `<tr><td>Borrower 2 Available Cash</td><td class="right">${fmt(cash2)}</td></tr>`;
-    }
-    cpfHTML += `<tr><td>Total Available Cash</td><td class="right">${fmt(totalCash)}</td></tr>`;
-    cpfHTML += `<tr><td>Cash for Down Payment</td><td class="right">${fmt(cashRequired)}</td></tr>`;
-    cpfHTML += `<tr><td>Buyer's Stamp Duty (BSD)</td><td class="right">${fmt(bsdForProperty)}</td></tr>`;
-    cpfHTML += `<tr class="total-row"><td>Total Cash Needed</td><td class="right">${fmt(totalCashNeeded)}</td></tr>`;
-    if (cashShortfall > 0) {
-        cpfHTML += `<tr class="total-row"><td>Cash Shortfall</td><td class="right" style="color:#c53030">${fmt(cashShortfall)}</td></tr>`;
+        let cpfHTML = '';
+        cpfHTML += `<tr><td>Property Price</td><td class="right">${fmt(propertyPrice)}</td></tr>`;
+        cpfHTML += `<tr><td>Maximum Loan</td><td class="right">${fmt(maxLoan)}</td></tr>`;
+        cpfHTML += `<tr><td>Down Payment Required</td><td class="right">${fmt(downPayment)}</td></tr>`;
+        cpfHTML += `<tr><td>Minimum Cash Component</td><td class="right">${fmt(minCashAdjusted)}</td></tr>`;
+        cpfHTML += `<tr><td>Borrower 1 CPF OA Available</td><td class="right">${fmt(cpfOA1)}</td></tr>`;
+        if (isJoint) {
+            cpfHTML += `<tr><td>Borrower 2 CPF OA Available</td><td class="right">${fmt(cpfOA2)}</td></tr>`;
+        }
+        cpfHTML += `<tr class="total-row"><td>CPF Usable for Down Payment</td><td class="right">${fmt(cpfForDownPayment)}</td></tr>`;
+        cpfHTML += `<tr><td colspan="2" style="padding-top:.75rem;font-weight:600;color:#2b6cb0">Cash Position</td></tr>`;
+        cpfHTML += `<tr><td>Borrower 1 Available Cash</td><td class="right">${fmt(cash1)}</td></tr>`;
+        if (isJoint) {
+            cpfHTML += `<tr><td>Borrower 2 Available Cash</td><td class="right">${fmt(cash2)}</td></tr>`;
+        }
+        cpfHTML += `<tr><td>Total Available Cash</td><td class="right">${fmt(totalCash)}</td></tr>`;
+        cpfHTML += `<tr><td>Cash for Down Payment</td><td class="right">${fmt(cashRequired)}</td></tr>`;
+        cpfHTML += `<tr><td>Buyer's Stamp Duty (BSD)</td><td class="right">${fmt(bsdForProperty)}</td></tr>`;
+        cpfHTML += `<tr class="total-row"><td>Total Cash Needed</td><td class="right">${fmt(totalCashNeeded)}</td></tr>`;
+        if (cashShortfall > 0) {
+            cpfHTML += `<tr class="total-row"><td>Cash Shortfall</td><td class="right" style="color:#c53030">${fmt(cashShortfall)}</td></tr>`;
+        } else {
+            cpfHTML += `<tr class="total-row"><td>Cash Remaining After Purchase</td><td class="right" style="color:#276749">${fmt(cashSurplus)}</td></tr>`;
+        }
+        document.getElementById('cpfBody').innerHTML = cpfHTML;
+
+        const cpfNotes = [];
+        if (outstandingLoans === 0 && loanType === 'bank') {
+            cpfNotes.push('First property with bank loan: minimum 5% cash, up to 20% payable by CPF, remaining 75% financed.');
+        } else if (outstandingLoans > 0) {
+            cpfNotes.push('With outstanding loans: higher cash down payment required (25% for 2nd property).');
+        }
+        if (isJoint) {
+            cpfNotes.push('Joint applicants: both CPF OA balances and cash can be combined.');
+        }
+        if (cashShortfall > 0) {
+            cpfNotes.push('You are short ' + fmt(cashShortfall) + ' in cash. Consider a lower-priced property or increasing your cash savings.');
+        }
+        cpfNotes.push('CPF withdrawal limit per person is capped at the property valuation. Amounts above the limit require cash.');
+        document.getElementById('cpfNote').innerHTML = cpfNotes.join('<br>');
     } else {
-        cpfHTML += `<tr class="total-row"><td>Cash Remaining After Purchase</td><td class="right" style="color:#276749">${fmt(cashSurplus)}</td></tr>`;
+        cpfCard.style.display = 'none';
     }
-    document.getElementById('cpfBody').innerHTML = cpfHTML;
-
-    const cpfNotes = [];
-    if (outstandingLoans === 0 && loanType === 'bank') {
-        cpfNotes.push('First property with bank loan: minimum 5% cash, up to 20% payable by CPF, remaining 75% financed.');
-    } else if (outstandingLoans > 0) {
-        cpfNotes.push('With outstanding loans: higher cash down payment required (25% for 2nd property).');
-    }
-    if (isJoint) {
-        cpfNotes.push('Joint applicants: both CPF OA balances and cash can be combined.');
-    }
-    if (cashShortfall > 0) {
-        cpfNotes.push('You are short ' + fmt(cashShortfall) + ' in cash. Consider a lower-priced property or increasing your cash savings.');
-    }
-    cpfNotes.push('CPF withdrawal limit per person is capped at the property valuation. Amounts above the limit require cash.');
-    document.getElementById('cpfNote').innerHTML = cpfNotes.join('<br>');
 
     // ── Display headline results ──
     document.getElementById('maxLoan').textContent = fmt(maxLoan);
@@ -792,6 +786,16 @@ function calculate() {
     document.getElementById('noteBox').innerHTML = notes.join('<br>');
 
 }
+
+/* ── Live calculation on any input change ── */
+(function init() {
+    const inputs = document.querySelectorAll('input[type="number"], select');
+    inputs.forEach(el => {
+        el.addEventListener('input', calculate);
+        el.addEventListener('change', calculate);
+    });
+    calculate();
+})();
 </script>
 </body>
 </html>
