@@ -2,7 +2,7 @@
   "name": "SG Mortgage Calculator",
   "short_name": "Mortgage",
   "description": "Singapore mortgage calculator with bank-specific rules, TDSR/MSR, and CPF",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "start_url": "/MJ-s-CC/",
   "scope": "/MJ-s-CC/",
   "display": "standalone",

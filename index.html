@@ -19,8 +19,6 @@
     <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
     <link rel="apple-touch-startup-image" href="icon-512.png">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root{
             --bg:#f7f8fc;--surface:#fff;--surface-hover:#fafbfe;
@@ -53,7 +51,7 @@
         }
         *{box-sizing:border-box;margin:0;padding:0}
         [data-theme="dark"]{color-scheme:dark}
-        body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+        body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
         .container{max-width:860px;margin:0 auto;padding:calc(2rem + env(safe-area-inset-top)) 1.25rem calc(4rem + env(safe-area-inset-bottom))}
         .header{text-align:center;margin-bottom:2.5rem}
         .header h1{font-size:2rem;font-weight:700;letter-spacing:-.03em;background:linear-gradient(135deg,var(--primary),#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
@@ -184,7 +182,7 @@
     <div class="header">
         <h1>Singapore Mortgage Calculator</h1>
         <p>Bank-specific rules, joint applications, age-tenure LTV &amp; CPF</p>
-        <p style="font-size:.72rem;color:var(--text-muted);margin-top:.2rem">v0.9.0</p>
+        <p style="font-size:.72rem;color:var(--text-muted);margin-top:.2rem">v1.0.0</p>
         <div class="header-buttons">
             <button class="btn btn-primary" onclick="saveBaseline()">Save Baseline</button>
             <button class="btn btn-muted" onclick="resetDefaults()">Reset to Defaults</button>
@@ -226,33 +224,33 @@
         <div class="row3">
             <div class="form-group">
                 <label for="age1">Age (years)</label>
-                <input type="number" id="age1" value="35" min="21" max="75">
+                <input type="number" id="age1" value="35" min="21" max="75" inputmode="numeric">
             </div>
             <div class="form-group">
                 <label for="fixedIncome1">Fixed Monthly Income (SGD) <small>base salary</small></label>
-                <input type="number" id="fixedIncome1" value="6000" min="0" step="100">
+                <input type="number" id="fixedIncome1" value="6000" min="0" step="100" inputmode="numeric">
             </div>
             <div class="form-group">
                 <label for="variableIncome1">Variable Annual Income (SGD) <small>commission/bonus/OT per year</small></label>
-                <input type="number" id="variableIncome1" value="24000" min="0" step="1000">
+                <input type="number" id="variableIncome1" value="24000" min="0" step="1000" inputmode="numeric">
             </div>
         </div>
         <div class="row3">
             <div class="form-group">
                 <label for="investIncome1">Investment Annual Income (SGD) <small>distributions/dividends per year</small></label>
-                <input type="number" id="investIncome1" value="0" min="0" step="1000">
+                <input type="number" id="investIncome1" value="0" min="0" step="1000" inputmode="numeric">
             </div>
             <div class="form-group">
                 <label for="debt1">Existing Monthly Debt (SGD) <small>car loans, credit cards, etc.</small></label>
-                <input type="number" id="debt1" value="0" min="0" step="50">
+                <input type="number" id="debt1" value="0" min="0" step="50" inputmode="numeric">
             </div>
             <div class="form-group">
                 <label for="cpfOA1">CPF OA Balance (SGD)</label>
-                <input type="number" id="cpfOA1" value="50000" min="0" step="1000">
+                <input type="number" id="cpfOA1" value="50000" min="0" step="1000" inputmode="numeric">
             </div>
             <div class="form-group">
                 <label for="cash1">Available Cash (SGD) <small>savings for property</small></label>
-                <input type="number" id="cash1" value="50000" min="0" step="1000">
+                <input type="number" id="cash1" value="50000" min="0" step="1000" inputmode="numeric">
             </div>
         </div>
 
@@ -271,33 +269,33 @@
             <div class="row3">
                 <div class="form-group">
                     <label for="age2">Age (years)</label>
-                    <input type="number" id="age2" value="33" min="21" max="75">
+                    <input type="number" id="age2" value="33" min="21" max="75" inputmode="numeric">
                 </div>
                 <div class="form-group">
                     <label for="fixedIncome2">Fixed Monthly Income (SGD)</label>
-                    <input type="number" id="fixedIncome2" value="4000" min="0" step="100">
+                    <input type="number" id="fixedIncome2" value="4000" min="0" step="100" inputmode="numeric">
                 </div>
                 <div class="form-group">
                     <label for="variableIncome2">Variable Annual Income (SGD)</label>
-                    <input type="number" id="variableIncome2" value="12000" min="0" step="1000">
+                    <input type="number" id="variableIncome2" value="12000" min="0" step="1000" inputmode="numeric">
                 </div>
             </div>
             <div class="row3">
                 <div class="form-group">
                     <label for="investIncome2">Investment Annual Income (SGD)</label>
-                    <input type="number" id="investIncome2" value="0" min="0" step="1000">
+                    <input type="number" id="investIncome2" value="0" min="0" step="1000" inputmode="numeric">
                 </div>
                 <div class="form-group">
                     <label for="debt2">Existing Monthly Debt (SGD)</label>
-                    <input type="number" id="debt2" value="0" min="0" step="50">
+                    <input type="number" id="debt2" value="0" min="0" step="50" inputmode="numeric">
                 </div>
                 <div class="form-group">
                     <label for="cpfOA2">CPF OA Balance (SGD)</label>
-                    <input type="number" id="cpfOA2" value="30000" min="0" step="1000">
+                    <input type="number" id="cpfOA2" value="30000" min="0" step="1000" inputmode="numeric">
                 </div>
                 <div class="form-group">
                     <label for="cash2">Available Cash (SGD)</label>
-                    <input type="number" id="cash2" value="30000" min="0" step="1000">
+                    <input type="number" id="cash2" value="30000" min="0" step="1000" inputmode="numeric">
                 </div>
             </div>
         </div>
@@ -317,17 +315,17 @@
             </div>
             <div class="form-group">
                 <label for="propertyPrice">Property Price (SGD) <small>optional — for CPF &amp; cash calc</small></label>
-                <input type="number" id="propertyPrice" value="0" min="0" step="10000">
+                <input type="number" id="propertyPrice" value="0" min="0" step="10000" inputmode="numeric">
             </div>
         </div>
         <div class="row3">
             <div class="form-group">
                 <label for="tenure">Loan Tenure (years)</label>
-                <input type="number" id="tenure" value="25" min="1" max="30">
+                <input type="number" id="tenure" value="25" min="1" max="30" inputmode="numeric">
             </div>
             <div class="form-group">
                 <label for="interestRate">Interest Rate (% p.a.)</label>
-                <input type="number" id="interestRate" value="3.5" min="0.1" max="10" step="0.1">
+                <input type="number" id="interestRate" value="3.5" min="0.1" max="10" step="0.1" inputmode="decimal">
             </div>
             <div class="form-group">
                 <label for="outstandingLoans">Outstanding Home Loans</label>
