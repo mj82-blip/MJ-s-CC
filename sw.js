@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sg-mortgage-v1';
+const CACHE_NAME = 'sg-mortgage-v2';
 const ASSETS = [
   '/MJ-s-CC/',
   '/MJ-s-CC/index.html',
