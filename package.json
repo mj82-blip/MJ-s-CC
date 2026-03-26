@@ -1,0 +1,19 @@
+{
+  "name": "mj-s-cc",
+  "version": "1.0.0",
+  "description": "A simple, browser-based calculator to estimate your maximum mortgage in Singapore based on MAS (Monetary Authority of Singapore) regulations.",
+  "main": "sw.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://local_proxy@127.0.0.1:35697/git/mj82-blip/MJ-s-CC"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^30.3.0"
+  }
+}
